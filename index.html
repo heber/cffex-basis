@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>中国股指期货贴水跟踪（分红矫正）</title>
-  <meta name="description" content="中金所 IH/IF/IC/IM 当月、次月、当季、下季分红矫正年化贴水。静态页读取 data/latest.json。" />
+  <meta name="description" content="中金所 IH/IF/IC/IM 当月、次月、当季、下季分红矫正年化贴水，以及近3年历史分位。分位越高越贴水。静态页读取 data/latest.json。" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -43,7 +43,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="text-xl md:text-2xl font-bold tracking-tight">中国股指期货贴水跟踪<span class="text-emerald-400 text-base md:text-lg font-medium ml-2">（分红矫正）</span></h1>
-          <p class="text-slate-400 text-sm mt-1">IH / IF / IC / IM · CFFEX 当月·次月·当季·下季 · 快照：新浪财经 → data/latest.json</p>
+          <p class="text-slate-400 text-sm mt-1">IH / IF / IC / IM · CFFEX 当月·次月·当季·下季 · 近3年历史分位 · 快照：新浪财经 → data/latest.json</p>
         </div>
         <div class="flex items-center gap-3 text-sm">
           <span id="ts" class="text-slate-400 num">—</span>
@@ -66,6 +66,7 @@
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded badge-disc"></span> 贴水（现货 &gt; 期货）绿</span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded badge-cont"></span> 升水（现货 &lt; 期货）红</span>
         <span class="text-slate-400">年化贴水率正值 = 期货相对便宜（贴水）</span>
+        <span class="text-slate-400">历史分位越高 = 当前比近 3 年同期限更贴水</span>
       </div>
     </section>
 
@@ -101,12 +102,20 @@
       </div>
       <p class="text-xs text-slate-500 mt-3">
         现货与期货价格来自仓库里的 <code class="text-slate-400">data/latest.json</code>（GitHub Action 在交易日约每 30 分钟更新）。
-        修改股息率后，页面用同一季节性分红模型在浏览器里重算矫正基差与年化贴水（自然日 365），不再请求行情服务器。
+        修改股息率后，页面用同一季节性分红模型在浏览器里重算矫正基差、年化贴水（自然日 365）和历史分位，不再请求行情服务器。
+        历史价格来自 <code class="text-slate-400">data/history/series.json</code>。
         默认股息率：IH 2.3%、IF 2.1%、IC 1.05%、IM 0.92%（估算，5–7 月分红高峰）。
       </p>
     </section>
 
-    <div id="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+    <section class="space-y-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-sm font-semibold text-slate-300">当月概览</h2>
+        <p class="text-xs text-slate-500">历史分位越高 = 当前越贴水（近 3 年，同一期限）</p>
+      </div>
+      <p id="calendarNote" class="text-xs text-amber-200/80"></p>
+      <div id="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+    </section>
 
     <div id="products" class="space-y-6">
       <div class="text-center text-slate-500 py-12">加载中…</div>
@@ -118,7 +127,10 @@
         <li><strong class="text-slate-300">原始基差</strong> = 现货 − 期货（正 = 贴水，负 = 升水）</li>
         <li><strong class="text-slate-300">期内分红点数</strong> = 现货 × 年化股息率 × 剩余期限内季节性权重之和（5–7 月高峰，按日比例）</li>
         <li><strong class="text-slate-300">矫正基差</strong> = 原始基差 − 期内分红点数</li>
-        <li><strong class="text-slate-300">年化贴水率</strong> = 矫正基差 / 现货 × 365 / 剩余自然日（只用自然日 365，不含无风险利率）</li>
+        <li><strong class="text-slate-300">年化贴水率</strong> = 矫正基差 / 现货 × 365 / 剩余自然日（只用自然日 365，不含无风险利率，不用 252 日）</li>
+        <li><strong class="text-slate-300">历史分位</strong>：同一品种、同一期限（当月 / 次月 / 当季 / 下季）里，分红矫正年化贴水小于等于当前值的交易日占比（0–100%）。<strong class="text-emerald-300">分位越高，当前越贴水</strong>（比这段历史里更多的日子更便宜）；分位越低，当前越贵（贴水更浅或升水）。样本是行情日往前 3 个日历年，不含行情日当天。少于 30 个交易日不显示分位。</li>
+        <li><strong class="text-slate-300">历史库存</strong>：新浪期货日 K 与指数日 K 的收盘价，自接口可得日起（IH/IF/IC 约 2018-10，IM 自 2022-07 上市），存在 <code class="text-slate-400">data/history/series.json</code>。页面分位只用其中近 3 年。每个交易日 16:00（北京时间）的 Action 追加当日，同一天重复运行会覆盖。股息率用默认常数和同一季节性模型，不是事后真实分红。当月到期周剩余日很短，年化会被放大，分位容易偏高。</li>
+        <li id="historyArchive" class="text-slate-500 text-xs">各品种库存起点与当月样本数见快照里的 history_meta。</li>
         <li><strong class="text-slate-300">合约市值</strong> = 最新价 × 乘数（IH/IF = 300，IC/IM = 200）；持仓名义 = 持仓 × 价 × 乘数</li>
         <li><strong class="text-slate-300">到期日</strong> = 合约月份第三个周五；活跃合约 = 当月 / 次月 / 当季 / 下季</li>
         <li><span class="warn-raw">原始年化</span>未扣分红，近月在分红季会明显偏高，容易误导</li>
@@ -167,6 +179,145 @@
       if (raw > 0) return '<span class="badge-disc text-[10px] px-1.5 py-0.5 rounded ml-1">贴水</span>';
       if (raw < 0) return '<span class="badge-cont text-[10px] px-1.5 py-0.5 rounded ml-1">升水</span>';
       return "";
+    }
+
+    const MIN_HIST = 30;
+    let historyDoc = null;
+    let historyLoading = false;
+    let historyError = false;
+
+    function pctileClass(p) {
+      if (p == null || Number.isNaN(p)) return "text-slate-500";
+      if (p >= 80) return "text-emerald-400";
+      if (p >= 60) return "text-emerald-300";
+      if (p <= 20) return "text-red-400";
+      if (p <= 40) return "text-amber-300";
+      return "text-slate-200";
+    }
+
+    function fmtPctile(c) {
+      if (!c) return "历史分位 —";
+      if (c._hist_pending) return "历史分位计算中…";
+      if (c.hist_pct == null || Number.isNaN(c.hist_pct)) {
+        if (c.hist_n != null) return `样本不足 · N=${c.hist_n}`;
+        return "历史分位 —";
+      }
+      return `历史分位 ${Math.round(c.hist_pct)}% · N=${c.hist_n}`;
+    }
+
+    function pctileTitle(c) {
+      if (!c || c.hist_pct == null) return "近3年同期限样本不足，或尚未算出";
+      const span = `${c.hist_start || "?"} ~ ${c.hist_end || "?"}`;
+      return `${c.hist_window_label || "近3年"} ${c.label || ""} ${span}（不含行情日）。分位 = 样本中年化贴水≤当前值的占比。越高 = 当前更贴水。`;
+    }
+
+    function ymdToIso(n) {
+      const s = String(n);
+      return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+    }
+
+    function isoToYmd(iso) {
+      return Number(String(iso).replace(/-/g, ""));
+    }
+
+    function addDaysIso(iso, days) {
+      const t = parseISO(iso) + days * 86400000;
+      const d = new Date(t);
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function addYearsIso(iso, years) {
+      const [y, m, d] = iso.split("-").map(Number);
+      const dim = daysInMonth(y + years, m);
+      const day = Math.min(d, dim);
+      return `${y + years}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    function rankSample(rows, quoteIso, current, annualYield, seasonData) {
+      const empty = { pct: null, n: 0, start: null, end: null, label: "样本不足" };
+      if (!rows || current == null || !quoteIso) return empty;
+      const startIso = addYearsIso(quoteIso, -3);
+      const q = isoToYmd(quoteIso);
+      const s = isoToYmd(startIso);
+      const values = [];
+      let first = null;
+      let last = null;
+      for (const row of rows) {
+        const d = row[0];
+        if (d < s || d >= q) continue;
+        const spot = row[1];
+        const fut = row[2];
+        const days = row[3];
+        if (!(days > 0) || !(spot > 0) || !(fut > 0)) continue;
+        const dateStr = ymdToIso(d);
+        const expiryStr = addDaysIso(dateStr, days);
+        const rem = remainingDivPoints(spot, annualYield, dateStr, expiryStr, seasonData);
+        values.push(((spot - fut - rem) / spot) * (365 / days));
+        if (!first) first = dateStr;
+        last = dateStr;
+      }
+      const n = values.length;
+      if (n < MIN_HIST) return { pct: null, n, start: first, end: last, label: "样本不足" };
+      let le = 0;
+      for (const v of values) if (v <= current) le += 1;
+      const pct = Math.round((1000 * le) / n) / 10;
+      let label = "近3年";
+      if (first && first > addDaysIso(startIso, 10)) label = `自${first}起`;
+      return { pct, n, start: first, end: last, label };
+    }
+
+    function ensureHistory() {
+      if (historyDoc || historyLoading || historyError) return;
+      historyLoading = true;
+      fetch("data/history/series.json?t=" + Date.now())
+        .then(res => {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(doc => {
+          historyDoc = doc;
+          historyLoading = false;
+          if (snapshot) render(snapshot);
+        })
+        .catch(() => {
+          historyLoading = false;
+          historyError = true;
+          if (snapshot) render(snapshot);
+        });
+    }
+
+    function applyAdjustedPercentiles(view) {
+      if (!historyDoc) {
+        for (const p of view.products || []) {
+          for (const c of p.contracts || []) {
+            c.hist_pct = null;
+            c.hist_n = null;
+            c._hist_pending = !historyError;
+          }
+        }
+        return;
+      }
+      for (const p of view.products || []) {
+        const labels = (historyDoc.series || {})[p.code] || {};
+        for (const c of p.contracts || []) {
+          const ranked = rankSample(
+            labels[c.label] || [],
+            c.quote_date || view.today,
+            c.corr_ann_365,
+            p.dividend_yield,
+            view
+          );
+          c.hist_pct = ranked.pct;
+          c.hist_n = ranked.n;
+          c.hist_start = ranked.start;
+          c.hist_end = ranked.end;
+          c.hist_window_label = ranked.label;
+          c._hist_pending = false;
+        }
+      }
     }
 
     function parseISO(s) {
@@ -262,6 +413,15 @@
       const el = $("summary");
       el.innerHTML = (data.products || []).map(p => {
         const front = (p.contracts || [])[0] || {};
+        const main = (p.contracts || []).find(c => c.is_main);
+        const noisy = front.days_to_expiry != null && front.days_to_expiry <= 7;
+        const mainHtml = main && main.code && main.code !== front.code
+          ? `<div class="mt-1.5 pt-1.5 border-t border-slate-800 text-[11px] text-slate-400">
+              主力 ${main.label || ""} ${main.code}
+              <span class="num ${basisClass(main.corr_ann_365)}">${pct(main.corr_ann_365)}</span>
+              <div class="num ${pctileClass(main.hist_pct)}" title="${pctileTitle(main)}">${fmtPctile(main)}</div>
+            </div>`
+          : "";
         return `<div class="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3">
           <div class="flex items-baseline justify-between gap-2">
             <span class="font-bold">${p.code}</span>
@@ -270,6 +430,9 @@
           <div class="mt-1 text-xs text-slate-500">${front.code || "—"} · 当月</div>
           <div class="mt-2 text-lg font-semibold num ${basisClass(front.corr_ann_365)}">${pct(front.corr_ann_365)}</div>
           <div class="text-[11px] text-slate-500">年化贴水（365）· 原始基差 <span class="num ${basisClass(front.raw_basis)}">${num(front.raw_basis, 1)}</span></div>
+          <div class="mt-1 text-[13px] font-medium num ${pctileClass(front.hist_pct)}" title="${pctileTitle(front)}">${fmtPctile(front)}</div>
+          <div class="text-[10px] text-slate-500">${front.hist_window_label || "近3年"} · 当月 · 越高越贴水${noisy ? " · 到期周，年化易放大" : ""}</div>
+          ${mainHtml}
         </div>`;
       }).join("");
     }
@@ -292,6 +455,7 @@
           <td class="px-2 py-2.5 num text-right text-amber-300/90">${num(c.remaining_div_points, 2)}</td>
           <td class="px-2 py-2.5 num text-right ${basisClass(c.corrected_basis)} font-medium">${num(c.corrected_basis, 2)}</td>
           <td class="px-2 py-2.5 num text-right ${basisClass(c.corr_ann_365)} font-semibold">${pct(c.corr_ann_365)}</td>
+          <td class="px-2 py-2.5 num text-right text-xs ${pctileClass(c.hist_pct)}" title="${pctileTitle(c)}">${fmtPctile(c)}</td>
           <td class="px-2 py-2.5 num text-right warn-raw text-xs" title="未扣分红，易误导">${pct(c.raw_ann_365)}</td>
         </tr>`;
       }).join("");
@@ -328,6 +492,7 @@
                 <th class="px-2 py-2 text-right font-medium">期内分红</th>
                 <th class="px-2 py-2 text-right font-medium">矫正基差</th>
                 <th class="px-2 py-2 text-right font-medium">年化贴水</th>
+                <th class="px-2 py-2 text-right font-medium" title="近3年同期限。越高 = 当前更贴水">历史分位</th>
                 <th class="px-2 py-2 text-right font-medium text-red-400">原始年化⚠</th>
               </tr>
             </thead>
@@ -337,9 +502,39 @@
       </section>`;
     }
 
+    function renderCalendarNote(data) {
+      const el = $("calendarNote");
+      if (!el) return;
+      const quote = (((data.products || [])[0] || {}).contracts || [])[0];
+      const quoteDate = quote && quote.quote_date;
+      if (quoteDate && data.today && quoteDate !== data.today) {
+        el.textContent = `行情日 ${quoteDate}，剩余自然日按 ${data.today} 计算。非交易日年化会比收盘当日略高，近月历史分位也会偏高；季月几乎不受影响。`;
+      } else {
+        el.textContent = "";
+      }
+    }
+
+    function renderHistoryNote(data) {
+      const el = $("historyArchive");
+      if (!el) return;
+      const meta = data.history_meta;
+      if (!meta) {
+        el.textContent = "";
+        return;
+      }
+      el.textContent = `${meta.archive_note || ""}。展示窗口：${meta.window_label || "近3年"}。${meta.higher_means || ""}`;
+    }
+
     function render(data) {
       $("ts").textContent = data.timestamp || "—";
+      const adjusted = !inputsMatchSnapshot(data);
       const view = recompute(data);
+      if (adjusted) {
+        applyAdjustedPercentiles(view);
+        ensureHistory();
+      }
+      renderHistoryNote(data);
+      renderCalendarNote(data);
       renderSummary(view);
       const el = $("products");
       if (view.error) {

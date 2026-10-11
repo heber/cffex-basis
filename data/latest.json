@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11 03:13:35 +0000",
+  "timestamp": "2026-10-11 03:41:17 +0000",
   "today": "2026-10-11",
   "products": [
     {
@@ -34,7 +34,12 @@
           "raw_ann_365": 0.126248,
           "corr_ann_365": 0.120832,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 694,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 87.0,
+          "hist_window_label": "近3年"
         },
         {
           "label": "次月",
@@ -58,7 +63,12 @@
           "raw_ann_365": 0.085337,
           "corr_ann_365": 0.079831,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 724,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 91.2,
+          "hist_window_label": "近3年"
         },
         {
           "label": "当季",
@@ -82,7 +92,13 @@
           "raw_ann_365": 0.083083,
           "corr_ann_365": 0.077588,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "is_main": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 98.3,
+          "hist_window_label": "近3年"
         },
         {
           "label": "下季",
@@ -106,7 +122,12 @@
           "raw_ann_365": 0.062843,
           "corr_ann_365": 0.05632,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 97.9,
+          "hist_window_label": "近3年"
         }
       ]
     },
@@ -142,7 +163,12 @@
           "raw_ann_365": 0.159872,
           "corr_ann_365": 0.154927,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 694,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 89.9,
+          "hist_window_label": "近3年"
         },
         {
           "label": "次月",
@@ -166,7 +192,12 @@
           "raw_ann_365": 0.09396,
           "corr_ann_365": 0.088933,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 724,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 96.4,
+          "hist_window_label": "近3年"
         },
         {
           "label": "当季",
@@ -190,7 +221,13 @@
           "raw_ann_365": 0.090083,
           "corr_ann_365": 0.085065,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "is_main": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 99.2,
+          "hist_window_label": "近3年"
         },
         {
           "label": "下季",
@@ -214,7 +251,12 @@
           "raw_ann_365": 0.073195,
           "corr_ann_365": 0.067239,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 97.9,
+          "hist_window_label": "近3年"
         }
       ]
     },
@@ -250,7 +292,12 @@
           "raw_ann_365": 0.175236,
           "corr_ann_365": 0.172764,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 694,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 82.7,
+          "hist_window_label": "近3年"
         },
         {
           "label": "次月",
@@ -274,7 +321,12 @@
           "raw_ann_365": 0.116036,
           "corr_ann_365": 0.113522,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 724,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 80.0,
+          "hist_window_label": "近3年"
         },
         {
           "label": "当季",
@@ -298,7 +350,13 @@
           "raw_ann_365": 0.103641,
           "corr_ann_365": 0.101132,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "is_main": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 83.5,
+          "hist_window_label": "近3年"
         },
         {
           "label": "下季",
@@ -322,7 +380,12 @@
           "raw_ann_365": 0.095486,
           "corr_ann_365": 0.092508,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 82.4,
+          "hist_window_label": "近3年"
         }
       ]
     },
@@ -358,7 +421,12 @@
           "raw_ann_365": 0.133754,
           "corr_ann_365": 0.131588,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 694,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 56.5,
+          "hist_window_label": "近3年"
         },
         {
           "label": "次月",
@@ -382,7 +450,12 @@
           "raw_ann_365": 0.103431,
           "corr_ann_365": 0.101228,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 724,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 50.3,
+          "hist_window_label": "近3年"
         },
         {
           "label": "当季",
@@ -406,7 +479,13 @@
           "raw_ann_365": 0.105098,
           "corr_ann_365": 0.102899,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "is_main": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 59.4,
+          "hist_window_label": "近3年"
         },
         {
           "label": "下季",
@@ -430,7 +509,12 @@
           "raw_ann_365": 0.101344,
           "corr_ann_365": 0.098734,
           "is_contango": false,
-          "is_backwardation": true
+          "is_backwardation": true,
+          "hist_n": 727,
+          "hist_start": "2023-10-09",
+          "hist_end": "2026-10-08",
+          "hist_pct": 62.4,
+          "hist_window_label": "近3年"
         }
       ]
     }
@@ -467,7 +551,9 @@
       "IF": 300,
       "IC": 200,
       "IM": 200
-    }
+    },
+    "percentile": "同一品种、同一期限（当月/次月/当季/下季）样本中，分红矫正年化贴水 corr_ann_365 小于等于当前值的交易日占比，范围 0–100%。样本为行情日往前 3 个日历年，不含行情日当天。分位越高，当前贴水越深（相对该期限自身历史更便宜）",
+    "percentile_window": "页面展示近 3 年（行情日往前 3 个日历年，不含当天）。data/history/series.json 保存自新浪日 K 可得日起的更长库存，Action 每个交易日追加。"
   },
   "meta": {
     "source": "Sina Finance (hq.sinajs.cn)",
@@ -479,6 +565,62 @@
       "当季",
       "下季"
     ],
-    "update": "GitHub Actions cron 1,31 1-7 * * 1-5 UTC（约北京时间交易日 09:01–15:31，每 30 分钟）"
+    "update": "GitHub Actions cron 0 8 * * 1-5 UTC（北京时间周一至周五 16:00），并追加 data/history/series.json"
+  },
+  "history_meta": {
+    "window": "trailing_calendar_3y",
+    "window_label": "近3年",
+    "min_sample": 30,
+    "rule": "同一品种、同一期限（当月/次月/当季/下季）样本中，分红矫正年化贴水 corr_ann_365 小于等于当前值的交易日占比，范围 0–100%。样本为行情日往前 3 个日历年，不含行情日当天。",
+    "higher_means": "分位越高，当前贴水越深（相对该期限自身历史更便宜）",
+    "annualization": "仅 corr_ann_365 = 矫正基差 / 现货 × 365 / 剩余自然日；不用 252，不扣无风险利率",
+    "dividend_note": "历史序列使用与快照相同的默认股息率和季节性模型，不是逐笔真实分红。页面改股息率后，浏览器用同一库存重算分位。",
+    "source": "Sina InnerFuturesNewService.getDailyKLine futures close + CN_MarketData.getKLineData index close",
+    "store": "data/history/series.json",
+    "archive_note": "IH 自2018-10-22起（当月 1726 个交易日）；IF 自2018-10-22起（当月 1726 个交易日）；IC 自2018-10-22起（当月 1726 个交易日）；IM 自2022-07-22起（当月 973 个交易日）",
+    "archive": {
+      "products": {
+        "IH": {
+          "start": "2018-10-22",
+          "end": "2026-10-09",
+          "counts": {
+            "当月": 1726,
+            "次月": 1831,
+            "当季": 1869,
+            "下季": 1932
+          }
+        },
+        "IF": {
+          "start": "2018-10-22",
+          "end": "2026-10-09",
+          "counts": {
+            "当月": 1726,
+            "次月": 1831,
+            "当季": 1869,
+            "下季": 1932
+          }
+        },
+        "IC": {
+          "start": "2018-10-22",
+          "end": "2026-10-09",
+          "counts": {
+            "当月": 1726,
+            "次月": 1831,
+            "当季": 1869,
+            "下季": 1932
+          }
+        },
+        "IM": {
+          "start": "2022-07-22",
+          "end": "2026-10-09",
+          "counts": {
+            "当月": 973,
+            "次月": 1017,
+            "当季": 1020,
+            "下季": 1020
+          }
+        }
+      }
+    }
   }
 }
