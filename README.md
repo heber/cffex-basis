@@ -94,6 +94,8 @@ python3 scripts/fetch_basis.py --rebuild-history
 - 脚本每次写入新的时间戳；`data/latest.json` 或 `data/history/` 有变化才提交
 - 每次运行把行情日收盘追加进 `data/history/series.json`（已有日期覆盖）
 
+页面页头有 **手动刷新 / 在 Actions 里运行**，链到 [Update CFFEX basis](https://github.com/zaviichen/cffex-basis/actions/workflows/update-basis.yml)。静态站放不了能安全代访客触发 Actions 的密钥，所以按钮只打开工作流页面。GitHub 需登录，且对该仓库有写权限，再点 **Run workflow**，分支选 `main`。旁边的「数据更新于」来自 `data/latest.json` 的 `timestamp`（换算成北京时间）；「重新加载」只重读已提交快照，不拉新浪行情。
+
 本地手动刷新快照（仅标准库）：
 
 ```bash
