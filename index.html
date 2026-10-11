@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>中国股指期货贴水跟踪（分红矫正）</title>
-  <meta name="description" content="中金所 IH/IF/IC/IM 当月、次月、当季、下季分红矫正年化贴水，以及近3年历史分位。分位越高越贴水。静态页读取 data/latest.json。" />
+  <meta name="description" content="中金所 IH/IF/IC/IM 当月、次月、当季、下季分红矫正年化贴水。近3年贴水分位越高越贴水；指数点位分位越高越接近窗口高位。静态页读取 data/latest.json。" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -43,7 +43,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="text-xl md:text-2xl font-bold tracking-tight">中国股指期货贴水跟踪<span class="text-emerald-400 text-base md:text-lg font-medium ml-2">（分红矫正）</span></h1>
-          <p class="text-slate-400 text-sm mt-1">IH / IF / IC / IM · CFFEX 当月·次月·当季·下季 · 近3年历史分位 · 快照：新浪财经 → data/latest.json</p>
+          <p class="text-slate-400 text-sm mt-1">IH / IF / IC / IM · CFFEX 当月·次月·当季·下季 · 近3年贴水分位与指数点位分位 · 快照：新浪财经 → data/latest.json</p>
         </div>
         <div class="flex items-center gap-3 text-sm">
           <span id="ts" class="text-slate-400 num">—</span>
@@ -66,7 +66,8 @@
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded badge-disc"></span> 贴水（现货 &gt; 期货）绿</span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded badge-cont"></span> 升水（现货 &lt; 期货）红</span>
         <span class="text-slate-400">年化贴水率正值 = 期货相对便宜（贴水）</span>
-        <span class="text-slate-400">历史分位越高 = 当前比近 3 年同期限更贴水</span>
+        <span class="text-slate-400">贴水分位越高 = 当前比近 3 年同期限更贴水</span>
+        <span class="text-slate-400">指数点位分位越高 = 指数更接近近 3 年高位（不是贴水）</span>
       </div>
     </section>
 
@@ -102,7 +103,7 @@
       </div>
       <p class="text-xs text-slate-500 mt-3">
         现货与期货价格来自仓库里的 <code class="text-slate-400">data/latest.json</code>（GitHub Action 在交易日约每 30 分钟更新）。
-        修改股息率后，页面用同一季节性分红模型在浏览器里重算矫正基差、年化贴水（自然日 365）和历史分位，不再请求行情服务器。
+        修改股息率后，页面用同一季节性分红模型在浏览器里重算矫正基差、年化贴水（自然日 365）和贴水分位，不再请求行情服务器。指数点位分位只看指数收盘，不随股息率变化。
         历史价格来自 <code class="text-slate-400">data/history/series.json</code>。
         默认股息率：IH 2.3%、IF 2.1%、IC 1.05%、IM 0.92%（估算，5–7 月分红高峰）。
       </p>
@@ -111,7 +112,7 @@
     <section class="space-y-2">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
         <h2 class="text-sm font-semibold text-slate-300">当月概览</h2>
-        <p class="text-xs text-slate-500">历史分位越高 = 当前越贴水（近 3 年，同一期限）</p>
+        <p class="text-xs text-slate-500">贴水分位越高 = 当前越贴水；指数点位分位越高 = 指数更接近近 3 年高位</p>
       </div>
       <p id="calendarNote" class="text-xs text-amber-200/80"></p>
       <div id="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
@@ -128,8 +129,9 @@
         <li><strong class="text-slate-300">期内分红点数</strong> = 现货 × 年化股息率 × 剩余期限内季节性权重之和（5–7 月高峰，按日比例）</li>
         <li><strong class="text-slate-300">矫正基差</strong> = 原始基差 − 期内分红点数</li>
         <li><strong class="text-slate-300">年化贴水率</strong> = 矫正基差 / 现货 × 365 / 剩余自然日（只用自然日 365，不含无风险利率，不用 252 日）</li>
-        <li><strong class="text-slate-300">历史分位</strong>：同一品种、同一期限（当月 / 次月 / 当季 / 下季）里，分红矫正年化贴水小于等于当前值的交易日占比（0–100%）。<strong class="text-emerald-300">分位越高，当前越贴水</strong>（比这段历史里更多的日子更便宜）；分位越低，当前越贵（贴水更浅或升水）。样本是行情日往前 3 个日历年，不含行情日当天。少于 30 个交易日不显示分位。</li>
-        <li><strong class="text-slate-300">历史库存</strong>：新浪期货日 K 与指数日 K 的收盘价，自接口可得日起（IH/IF/IC 约 2018-10，IM 自 2022-07 上市），存在 <code class="text-slate-400">data/history/series.json</code>。页面分位只用其中近 3 年。每个交易日 16:00（北京时间）的 Action 追加当日，同一天重复运行会覆盖。股息率用默认常数和同一季节性模型，不是事后真实分红。当月到期周剩余日很短，年化会被放大，分位容易偏高。</li>
+        <li><strong class="text-slate-300">贴水分位</strong>：同一品种、同一期限（当月 / 次月 / 当季 / 下季）里，分红矫正年化贴水小于等于当前值的交易日占比（0–100%）。<strong class="text-emerald-300">分位越高，当前越贴水</strong>（比这段历史里更多的日子更便宜）；分位越低，当前越贵（贴水更浅或升水）。样本是行情日往前 3 个日历年，不含行情日当天。少于 30 个交易日不显示分位。</li>
+        <li><strong class="text-slate-300">指数点位分位</strong>：同一近 3 年窗口内，指数收盘小于等于当日现货的交易日占比（0–100%）。<strong class="text-sky-300">分位越高，指数越接近这段窗口的历史高位</strong>；分位越低，越接近窗口低位。这是指数点位，不是贴水。样本与贴水分位同一日历回看（行情日往前 3 个日历年，不含行情日当天），取库存里各期限按交易日去重后的指数收盘，所以 N 可以和某一期限的贴水样本数不同。少于 30 个交易日不显示。</li>
+        <li><strong class="text-slate-300">历史库存</strong>：新浪期货日 K 与指数日 K 的收盘价，自接口可得日起（IH/IF/IC 约 2018-10，IM 自 2022-07 上市），存在 <code class="text-slate-400">data/history/series.json</code>。贴水分位和指数点位分位都只用其中近 3 年。每个交易日 16:00（北京时间）的 Action 追加当日，同一天重复运行会覆盖。股息率用默认常数和同一季节性模型，不是事后真实分红。当月到期周剩余日很短，年化会被放大，贴水分位容易偏高。</li>
         <li id="historyArchive" class="text-slate-500 text-xs">各品种库存起点与当月样本数见快照里的 history_meta。</li>
         <li><strong class="text-slate-300">合约市值</strong> = 最新价 × 乘数（IH/IF = 300，IC/IM = 200）；持仓名义 = 持仓 × 价 × 乘数</li>
         <li><strong class="text-slate-300">到期日</strong> = 合约月份第三个周五；活跃合约 = 当月 / 次月 / 当季 / 下季</li>
@@ -196,19 +198,44 @@
     }
 
     function fmtPctile(c) {
-      if (!c) return "历史分位 —";
-      if (c._hist_pending) return "历史分位计算中…";
+      if (!c) return "贴水分位 —";
+      if (c._hist_pending) return "贴水分位计算中…";
       if (c.hist_pct == null || Number.isNaN(c.hist_pct)) {
         if (c.hist_n != null) return `样本不足 · N=${c.hist_n}`;
-        return "历史分位 —";
+        return "贴水分位 —";
       }
-      return `历史分位 ${Math.round(c.hist_pct)}% · N=${c.hist_n}`;
+      return `贴水分位 ${Math.round(c.hist_pct)}% · N=${c.hist_n}`;
     }
 
     function pctileTitle(c) {
-      if (!c || c.hist_pct == null) return "近3年同期限样本不足，或尚未算出";
+      if (!c || c.hist_pct == null) return "近3年同期限贴水样本不足，或尚未算出";
       const span = `${c.hist_start || "?"} ~ ${c.hist_end || "?"}`;
-      return `${c.hist_window_label || "近3年"} ${c.label || ""} ${span}（不含行情日）。分位 = 样本中年化贴水≤当前值的占比。越高 = 当前更贴水。`;
+      return `${c.hist_window_label || "近3年"} ${c.label || ""} ${span}（不含行情日）。贴水分位 = 样本中年化贴水≤当前值的占比。越高 = 当前更贴水。`;
+    }
+
+    function spotPctileClass(p) {
+      if (p == null || Number.isNaN(p)) return "text-slate-500";
+      if (p >= 80) return "text-sky-300";
+      if (p >= 60) return "text-sky-400";
+      if (p <= 20) return "text-violet-300";
+      if (p <= 40) return "text-violet-200";
+      return "text-slate-200";
+    }
+
+    function fmtSpotPctile(p) {
+      if (!p) return "指数点位分位 —";
+      if (p.spot_pct == null || Number.isNaN(p.spot_pct)) {
+        if (p.spot_n) return `样本不足 · N=${p.spot_n}`;
+        return "指数点位分位 —";
+      }
+      return `指数点位分位 ${Math.round(p.spot_pct)}% · N=${p.spot_n}`;
+    }
+
+    function spotPctileTitle(p) {
+      if (!p || p.spot_pct == null) return "近3年指数收盘样本不足，或尚未算出";
+      const span = `${p.spot_start || "?"} ~ ${p.spot_end || "?"}`;
+      const exact = Number(p.spot_pct).toFixed(1);
+      return `指数点位分位 ${exact}%。${p.spot_window_label || "近3年"} ${span}（不含行情日）。样本中指数收盘≤当日现货的占比。越高 = 指数更接近该窗口高位，不是贴水。`;
     }
 
     function ymdToIso(n) {
@@ -431,7 +458,9 @@
           <div class="mt-2 text-lg font-semibold num ${basisClass(front.corr_ann_365)}">${pct(front.corr_ann_365)}</div>
           <div class="text-[11px] text-slate-500">年化贴水（365）· 原始基差 <span class="num ${basisClass(front.raw_basis)}">${num(front.raw_basis, 1)}</span></div>
           <div class="mt-1 text-[13px] font-medium num ${pctileClass(front.hist_pct)}" title="${pctileTitle(front)}">${fmtPctile(front)}</div>
-          <div class="text-[10px] text-slate-500">${front.hist_window_label || "近3年"} · 当月 · 越高越贴水${noisy ? " · 到期周，年化易放大" : ""}</div>
+          <div class="text-[10px] text-slate-500">${front.hist_window_label || "近3年"} · 当月 · 贴水分位越高越贴水${noisy ? " · 到期周，年化易放大" : ""}</div>
+          <div class="mt-1.5 text-[13px] font-medium num ${spotPctileClass(p.spot_pct)}" title="${spotPctileTitle(p)}">${fmtSpotPctile(p)}</div>
+          <div class="text-[10px] text-slate-500">${p.spot_window_label || "近3年"} · 指数点位分位越高越接近高位</div>
           ${mainHtml}
         </div>`;
       }).join("");
@@ -456,6 +485,7 @@
           <td class="px-2 py-2.5 num text-right ${basisClass(c.corrected_basis)} font-medium">${num(c.corrected_basis, 2)}</td>
           <td class="px-2 py-2.5 num text-right ${basisClass(c.corr_ann_365)} font-semibold">${pct(c.corr_ann_365)}</td>
           <td class="px-2 py-2.5 num text-right text-xs ${pctileClass(c.hist_pct)}" title="${pctileTitle(c)}">${fmtPctile(c)}</td>
+          <td class="px-2 py-2.5 num text-right text-xs ${spotPctileClass(p.spot_pct)}" title="${spotPctileTitle(p)}">${fmtSpotPctile(p)}</td>
           <td class="px-2 py-2.5 num text-right warn-raw text-xs" title="未扣分红，易误导">${pct(c.raw_ann_365)}</td>
         </tr>`;
       }).join("");
@@ -470,6 +500,7 @@
           </div>
           <div class="flex flex-wrap gap-4 text-xs text-slate-400">
             <span>现货点位 <strong class="text-slate-100 num text-sm">${num(p.spot, 2)}</strong></span>
+            <span title="${spotPctileTitle(p)}">指数点位分位 <strong class="num text-sm ${spotPctileClass(p.spot_pct)}">${p.spot_pct == null ? "—" : Math.round(p.spot_pct) + "%"}</strong> <span class="text-slate-500">N=${p.spot_n ?? "—"}</span></span>
             <span>股息率 <strong class="text-emerald-300/90">${num(p.dividend_yield_pct, 2)}%</strong> <span class="text-slate-600">估算</span></span>
             <span>年化分红点 <strong class="num">${num(p.annual_div_points, 1)}</strong></span>
             <span>乘数 ${p.multiplier}</span>
@@ -492,7 +523,8 @@
                 <th class="px-2 py-2 text-right font-medium">期内分红</th>
                 <th class="px-2 py-2 text-right font-medium">矫正基差</th>
                 <th class="px-2 py-2 text-right font-medium">年化贴水</th>
-                <th class="px-2 py-2 text-right font-medium" title="近3年同期限。越高 = 当前更贴水">历史分位</th>
+                <th class="px-2 py-2 text-right font-medium" title="近3年同期限。越高 = 当前更贴水">贴水分位</th>
+                <th class="px-2 py-2 text-right font-medium" title="近3年指数收盘 ≤ 当日现货的占比。越高 = 更接近窗口高位，不是贴水">指数点位分位</th>
                 <th class="px-2 py-2 text-right font-medium text-red-400">原始年化⚠</th>
               </tr>
             </thead>
@@ -508,7 +540,7 @@
       const quote = (((data.products || [])[0] || {}).contracts || [])[0];
       const quoteDate = quote && quote.quote_date;
       if (quoteDate && data.today && quoteDate !== data.today) {
-        el.textContent = `行情日 ${quoteDate}，剩余自然日按 ${data.today} 计算。非交易日年化会比收盘当日略高，近月历史分位也会偏高；季月几乎不受影响。`;
+        el.textContent = `行情日 ${quoteDate}，剩余自然日按 ${data.today} 计算。非交易日年化会比收盘当日略高，近月贴水分位也会偏高；季月几乎不受影响。指数点位分位用行情日收盘，不随剩余日变化。`;
       } else {
         el.textContent = "";
       }
@@ -522,7 +554,13 @@
         el.textContent = "";
         return;
       }
-      el.textContent = `${meta.archive_note || ""}。展示窗口：${meta.window_label || "近3年"}。${meta.higher_means || ""}`;
+      const bits = [
+        meta.archive_note,
+        `展示窗口：${meta.window_label || "近3年"}`,
+        meta.higher_means,
+        meta.spot_higher_means,
+      ].filter(Boolean);
+      el.textContent = bits.join("。") + "。";
     }
 
     function render(data) {

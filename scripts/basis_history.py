@@ -44,15 +44,22 @@ SOURCE = (
 )
 ROW_FIELDS = ["date_yyyymmdd", "spot", "fut_close", "days_to_expiry", "corr_ann_365"]
 PERCENTILE_RULE = (
-    "同一品种、同一期限（当月/次月/当季/下季）样本中，分红矫正年化贴水 "
+    "贴水分位：同一品种、同一期限（当月/次月/当季/下季）样本中，分红矫正年化贴水 "
     "corr_ann_365 小于等于当前值的交易日占比，范围 0–100%。"
     "样本为行情日往前 3 个日历年，不含行情日当天。"
 )
-HIGHER_MEANS = "分位越高，当前贴水越深（相对该期限自身历史更便宜）"
+HIGHER_MEANS = "贴水分位越高，当前贴水越深（相对该期限自身历史更便宜）"
+SPOT_PERCENTILE_RULE = (
+    "指数点位分位 = 同一品种、行情日往前 3 个日历年（不含行情日当天）的指数收盘里，"
+    "收盘小于等于当日现货的交易日占比，范围 0–100%。"
+    "样本取自库存中各期限按交易日去重后的指数收盘，与贴水分位同一日历窗口。"
+    "某一期限期货缺收盘时，该日仍可计入指数样本，因此 N 可以和贴水样本数不同。"
+)
+SPOT_HIGHER_MEANS = "分位越高，指数越接近这段窗口的历史高位（不是贴水分位）"
 ANNUALIZATION = "仅 corr_ann_365 = 矫正基差 / 现货 × 365 / 剩余自然日；不用 252，不扣无风险利率"
 DIVIDEND_NOTE = (
     "历史序列使用与快照相同的默认股息率和季节性模型，不是逐笔真实分红。"
-    "页面改股息率后，浏览器用同一库存重算分位。"
+    "页面改股息率后，浏览器用同一库存重算贴水分位。指数点位分位不随股息率变化。"
 )
 
 _THROTTLE = threading.Lock()
@@ -108,6 +115,36 @@ def round1(value: Optional[float]) -> Optional[float]:
     if value is None:
         return None
     return float(Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+
+
+def select_spot_sample(
+    labels: Dict[str, List[List[Any]]], quote: date
+) -> Tuple[List[float], Optional[date], Optional[date]]:
+    """Unique index closes over the same trailing 3 calendar years, excluding quote.
+
+    Each tenor row already stores that session's index close. The same date can
+    appear on several tenors; it counts once. A day missing from one tenor still
+    counts when another tenor stored the close.
+    """
+    start_i = ymd_int(add_years(quote, -3))
+    quote_i = ymd_int(quote)
+    by_day: Dict[int, float] = {}
+    for rows in labels.values():
+        for row in rows:
+            ymd = int(row[0])
+            if ymd < start_i or ymd >= quote_i:
+                continue
+            try:
+                spot = float(row[1])
+            except (TypeError, ValueError):
+                continue
+            if spot <= 0:
+                continue
+            by_day.setdefault(ymd, spot)
+    if not by_day:
+        return [], None, None
+    days = sorted(by_day)
+    return [by_day[day] for day in days], date_from_ymd(days[0]), date_from_ymd(days[-1])
 
 
 def select_sample(
@@ -204,6 +241,8 @@ def new_document(series: Dict[str, Dict[str, List[List[Any]]]]) -> Dict[str, Any
         "window_label": WINDOW_LABEL,
         "percentile_rule": PERCENTILE_RULE,
         "higher_means": HIGHER_MEANS,
+        "spot_percentile_rule": SPOT_PERCENTILE_RULE,
+        "spot_higher_means": SPOT_HIGHER_MEANS,
         "annualization": ANNUALIZATION,
         "dividend_note": DIVIDEND_NOTE,
         "min_sample": MIN_SAMPLE,
@@ -602,9 +641,52 @@ def _window_label(quote: date, sample_start: Optional[date]) -> str:
     return WINDOW_LABEL
 
 
+def _blank_spot(product: Dict[str, Any]) -> None:
+    product["spot_pct"] = None
+    product["spot_n"] = 0
+    product["spot_start"] = None
+    product["spot_end"] = None
+    product["spot_window_label"] = "样本不足"
+
+
+def attach_spot_percentile(
+    product: Dict[str, Any], payload: Dict[str, Any], doc: Dict[str, Any]
+) -> None:
+    """Index-level percentile. Independent of tenor and of the dividend yield."""
+    quote_s = None
+    for contract in product.get("contracts") or []:
+        if contract.get("quote_date"):
+            quote_s = contract["quote_date"]
+            break
+    if not quote_s:
+        quote_s = payload.get("today")
+    current = product.get("spot")
+    if current is None:
+        for contract in product.get("contracts") or []:
+            if contract.get("spot") is not None:
+                current = contract["spot"]
+                break
+    labels = doc.get("series", {}).get(product.get("code"), {})
+    if not quote_s or current is None:
+        _blank_spot(product)
+        return
+    quote = date.fromisoformat(quote_s)
+    sample, first, last = select_spot_sample(labels, quote)
+    product["spot_n"] = len(sample)
+    product["spot_start"] = first.isoformat() if first else None
+    product["spot_end"] = last.isoformat() if last else None
+    if len(sample) >= MIN_SAMPLE:
+        product["spot_pct"] = round1(percentile_leq(sample, float(current)))
+        product["spot_window_label"] = _window_label(quote, first)
+    else:
+        product["spot_pct"] = None
+        product["spot_window_label"] = "样本不足"
+
+
 def attach_percentiles(payload: Dict[str, Any], doc: Dict[str, Any]) -> None:
     for product in payload["products"]:
         mark_main(product)
+        attach_spot_percentile(product, payload, doc)
         code = product["code"]
         for contract in product["contracts"]:
             quote_s = contract.get("quote_date") or payload.get("today")
@@ -642,6 +724,8 @@ def attach_percentiles(payload: Dict[str, Any], doc: Dict[str, Any]) -> None:
         "min_sample": MIN_SAMPLE,
         "rule": PERCENTILE_RULE,
         "higher_means": HIGHER_MEANS,
+        "spot_rule": SPOT_PERCENTILE_RULE,
+        "spot_higher_means": SPOT_HIGHER_MEANS,
         "annualization": ANNUALIZATION,
         "dividend_note": DIVIDEND_NOTE,
         "source": SOURCE,
@@ -650,6 +734,7 @@ def attach_percentiles(payload: Dict[str, Any], doc: Dict[str, Any]) -> None:
         "archive": doc["archive"],
     }
     payload["methodology"]["percentile"] = PERCENTILE_RULE + HIGHER_MEANS
+    payload["methodology"]["spot_percentile"] = SPOT_PERCENTILE_RULE + SPOT_HIGHER_MEANS
     payload["methodology"]["percentile_window"] = (
         "页面展示近 3 年（行情日往前 3 个日历年，不含当天）。"
         "data/history/series.json 保存自新浪日 K 可得日起的更长库存，Action 每个交易日追加。"
@@ -668,10 +753,20 @@ def apply(payload: Dict[str, Any], rebuild: bool = False, path: Path = SERIES_PA
         else:
             doc = ensure_yields(loaded)
     upsert_payload(doc, payload)
+    doc["percentile_rule"] = PERCENTILE_RULE
+    doc["higher_means"] = HIGHER_MEANS
+    doc["spot_percentile_rule"] = SPOT_PERCENTILE_RULE
+    doc["spot_higher_means"] = SPOT_HIGHER_MEANS
     attach_percentiles(payload, doc)
     save_series(doc, path)
     print(f"wrote {path}", flush=True)
     for product in payload["products"]:
+        print(
+            f"  {product['code']} spot={product.get('spot')} "
+            f"spot_pct={product.get('spot_pct')} N={product.get('spot_n')} "
+            f"{product.get('spot_start')}..{product.get('spot_end')}",
+            flush=True,
+        )
         for contract in product["contracts"]:
             print(
                 f"  {product['code']} {contract.get('label')} {contract.get('code')} "
