@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中国股指期货贴水跟踪（分红矫正）</title>
+  <meta name="description" content="中金所 IH/IF/IC/IM 当月、次月、当季、下季分红矫正年化贴水。静态页读取 data/latest.json。" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            disc: { DEFAULT: '#059669', light: '#d1fae5', dark: '#047857' },
+            cont: { DEFAULT: '#dc2626', light: '#fee2e2', dark: '#b91c1c' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; }
+    .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    table { border-collapse: collapse; }
+    th, td { white-space: nowrap; }
+    .warn-raw { color: #f87171; font-weight: 600; }
+    .badge-disc { background: #059669; color: #fff; }
+    .badge-cont { background: #dc2626; color: #fff; }
+    .input-sm {
+      background: #0f172a; border: 1px solid #334155; border-radius: 0.375rem;
+      padding: 0.35rem 0.5rem; color: #e2e8f0; width: 5.5rem;
+    }
+    .input-sm:focus { outline: 2px solid #3b82f6; border-color: transparent; }
+    @media (max-width: 768px) {
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .input-sm { width: 4.5rem; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-20 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">中国股指期货贴水跟踪<span class="text-emerald-400 text-base md:text-lg font-medium ml-2">（分红矫正）</span></h1>
+          <p class="text-slate-400 text-sm mt-1">IH / IF / IC / IM · CFFEX 当月·次月·当季·下季 · 快照：新浪财经 → data/latest.json</p>
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+          <span id="ts" class="text-slate-400 num">—</span>
+          <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">待命</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <section class="rounded-xl border border-amber-700/40 bg-amber-950/30 p-4 md:p-5">
+      <h2 class="text-amber-300 font-semibold mb-2">为什么简单贴水计算器是错的？</h2>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        价格指数在成分股<strong class="text-amber-200">除息</strong>时自然回落，期货定价已隐含期内分红。
+        直接用 <code class="text-amber-200 bg-slate-900 px-1 rounded">(现货 − 期货) / 现货</code> 年化，会把「分红」误当成「贴水」。
+        必须用 <strong class="text-emerald-300">矫正基差 = 原始基差 − 期内分红点数</strong> 再年化。
+        页面同时展示「未扣分红的原始年化」并以<span class="warn-raw">红色</span>标注，提醒易误导。
+      </p>
+      <div class="mt-3 flex flex-wrap gap-3 text-xs">
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded badge-disc"></span> 贴水（现货 &gt; 期货）绿</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded badge-cont"></span> 升水（现货 &lt; 期货）红</span>
+        <span class="text-slate-400">年化贴水率正值 = 期货相对便宜（贴水）</span>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-slate-700 bg-slate-900 p-4 md:p-5">
+      <h2 class="text-sm font-semibold text-slate-300 mb-3">参数控制</h2>
+      <div class="flex flex-wrap gap-4 items-end">
+        <label class="text-xs text-slate-400">无风险利率 %
+          <input id="rf" type="number" step="0.1" value="1.5" class="input-sm block mt-1" />
+        </label>
+        <label class="text-xs text-slate-400">IH 股息率 % <span class="text-slate-500">默认 2.3</span>
+          <input id="yield_IH" type="number" step="0.01" value="2.3" class="input-sm block mt-1" />
+        </label>
+        <label class="text-xs text-slate-400">IF 股息率 % <span class="text-slate-500">默认 2.1</span>
+          <input id="yield_IF" type="number" step="0.01" value="2.1" class="input-sm block mt-1" />
+        </label>
+        <label class="text-xs text-slate-400">IC 股息率 % <span class="text-slate-500">默认 1.05</span>
+          <input id="yield_IC" type="number" step="0.01" value="1.05" class="input-sm block mt-1" />
+        </label>
+        <label class="text-xs text-slate-400">IM 股息率 % <span class="text-slate-500">默认 0.92</span>
+          <input id="yield_IM" type="number" step="0.01" value="0.92" class="input-sm block mt-1" />
+        </label>
+        <label class="text-xs text-slate-400">重新加载快照（秒）
+          <select id="interval" class="input-sm block mt-1 w-auto">
+            <option value="0">关闭</option>
+            <option value="60" selected>60</option>
+            <option value="120">120</option>
+            <option value="300">300</option>
+          </select>
+        </label>
+        <button id="btnRefresh" type="button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition">
+          重新加载
+        </button>
+        <button id="btnReset" type="button" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition">
+          重置默认
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 mt-3">
+        现货与期货价格来自仓库里的 <code class="text-slate-400">data/latest.json</code>（GitHub Action 在交易日约每 30 分钟更新）。
+        修改股息率或无风险利率后，页面用同一季节性分红模型在浏览器里重算，不再请求行情服务器。
+        默认股息率：IH 2.3%、IF 2.1%、IC 1.05%、IM 0.92%（估算，5–7 月分红高峰）。
+      </p>
+    </section>
+
+    <div id="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+
+    <div id="products" class="space-y-6">
+      <div class="text-center text-slate-500 py-12">加载中…</div>
+    </div>
+
+    <footer class="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400 space-y-3">
+      <h2 class="text-slate-200 font-semibold">方法论与免责声明</h2>
+      <ul class="list-disc list-inside space-y-1.5 leading-relaxed">
+        <li><strong class="text-slate-300">原始基差</strong> = 现货 − 期货（正 = 贴水，负 = 升水）</li>
+        <li><strong class="text-slate-300">期内分红点数</strong> = 现货 × 年化股息率 × 剩余期限内季节性权重之和（5–7 月高峰，按日比例）</li>
+        <li><strong class="text-slate-300">矫正基差</strong> = 原始基差 − 期内分红点数</li>
+        <li><strong class="text-slate-300">年化贴水率（365）</strong> = 矫正基差 / 现货 × 365 / 剩余自然日</li>
+        <li><strong class="text-slate-300">年化贴水率（252）</strong> = 矫正基差 / 现货 × 252 / 剩余自然日</li>
+        <li><strong class="text-slate-300">超额年化</strong> = 矫正年化 − 无风险利率（资金成本）</li>
+        <li><strong class="text-slate-300">合约市值</strong> = 最新价 × 乘数（IH/IF = 300，IC/IM = 200）；持仓名义 = 持仓 × 价 × 乘数</li>
+        <li><strong class="text-slate-300">到期日</strong> = 合约月份第三个周五；活跃合约 = 当月 / 次月 / 当季 / 下季</li>
+        <li><span class="warn-raw">原始年化</span>未扣分红，近月在分红季会明显偏高，容易误导</li>
+      </ul>
+      <p class="text-amber-500/90 text-xs leading-relaxed border-t border-slate-800 pt-3">
+        免责声明：股息为估算，非券商成分股逐笔预测。本页为 GitHub Pages 静态站，不运行行情服务器；数字以最近一次提交的快照为准，周末/节假日为最近交易日收盘价。
+        仅供研究参考，不构成投资建议。数据来自新浪财经公开行情，可能有延迟或偏差。
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const DEFAULTS = { rf: 1.5, IH: 2.3, IF: 2.1, IC: 1.05, IM: 0.92 };
+    let timer = null;
+    let snapshot = null;
+
+    function $(id) { return document.getElementById(id); }
+
+    function pct(v, digits = 2) {
+      if (v == null || Number.isNaN(v)) return "—";
+      return (v * 100).toFixed(digits) + "%";
+    }
+
+    function num(v, digits = 2) {
+      if (v == null || Number.isNaN(v)) return "—";
+      return Number(v).toFixed(digits);
+    }
+
+    function fmtMV(yuan) {
+      if (yuan == null || Number.isNaN(yuan)) return "—";
+      const abs = Math.abs(yuan);
+      if (abs >= 1e8) return (yuan / 1e8).toFixed(2) + "亿元";
+      if (abs >= 1e4) return (yuan / 1e4).toFixed(2) + "万元";
+      return Math.round(yuan) + "元";
+    }
+
+    function basisClass(raw) {
+      if (raw == null) return "text-slate-400";
+      if (raw > 0) return "text-emerald-400";
+      if (raw < 0) return "text-red-400";
+      return "text-slate-300";
+    }
+
+    function badge(raw) {
+      if (raw == null) return "";
+      if (raw > 0) return '<span class="badge-disc text-[10px] px-1.5 py-0.5 rounded ml-1">贴水</span>';
+      if (raw < 0) return '<span class="badge-cont text-[10px] px-1.5 py-0.5 rounded ml-1">升水</span>';
+      return "";
+    }
+
+    function parseISO(s) {
+      const [y, m, d] = s.split("-").map(Number);
+      return Date.UTC(y, m - 1, d);
+    }
+
+    function daysInMonth(y, m) {
+      return new Date(Date.UTC(y, m, 0)).getUTCDate();
+    }
+
+    function seasonWeight(data, month) {
+      const s = data.seasonality || {};
+      const w = s[String(month)];
+      return w == null ? 0 : Number(w);
+    }
+
+    function remainingDivPoints(spot, annualYield, todayStr, expiryStr, data) {
+      const today = parseISO(todayStr);
+      const expiry = parseISO(expiryStr);
+      if (expiry <= today || spot <= 0 || annualYield <= 0) return 0;
+      const annualPts = spot * annualYield;
+      let total = 0;
+      let y = new Date(today).getUTCFullYear();
+      let m = new Date(today).getUTCMonth() + 1;
+      for (let guard = 0; guard < 36; guard++) {
+        const dim = daysInMonth(y, m);
+        const monthStart = Date.UTC(y, m - 1, 1);
+        const monthEnd = Date.UTC(y, m - 1, dim);
+        const rangeStart = Math.max(today + 86400000, monthStart);
+        const rangeEnd = Math.min(expiry, monthEnd);
+        if (rangeStart <= rangeEnd) {
+          const nDays = Math.round((rangeEnd - rangeStart) / 86400000) + 1;
+          total += seasonWeight(data, m) * (nDays / dim);
+        }
+        if (monthEnd >= expiry) break;
+        if (m === 12) { y += 1; m = 1; } else { m += 1; }
+      }
+      return annualPts * total;
+    }
+
+    function readInputs() {
+      const yields = {};
+      ["IH", "IF", "IC", "IM"].forEach(p => {
+        const v = parseFloat($("yield_" + p).value);
+        yields[p] = Number.isNaN(v) ? DEFAULTS[p] / 100 : v / 100;
+      });
+      const rfPct = parseFloat($("rf").value);
+      return {
+        rf: Number.isNaN(rfPct) ? DEFAULTS.rf / 100 : rfPct / 100,
+        yields,
+      };
+    }
+
+    function inputsMatchSnapshot(data) {
+      const { rf, yields } = readInputs();
+      if (Math.abs(rf - data.risk_free_rate) > 1e-6) return false;
+      for (const p of data.products || []) {
+        if (Math.abs((yields[p.code] ?? p.dividend_yield) - p.dividend_yield) > 1e-6) return false;
+      }
+      return true;
+    }
+
+    function recompute(data) {
+      if (inputsMatchSnapshot(data)) return data;
+      const { rf, yields } = readInputs();
+      const copy = JSON.parse(JSON.stringify(data));
+      copy.risk_free_rate = rf;
+      copy.risk_free_rate_pct = rf * 100;
+      for (const p of copy.products || []) {
+        const yld = yields[p.code] ?? p.dividend_yield;
+        p.dividend_yield = yld;
+        p.dividend_yield_pct = yld * 100;
+        const spot = p.spot;
+        p.annual_div_points = spot ? spot * yld : null;
+        for (const c of p.contracts || []) {
+          if (c.last == null || spot == null) continue;
+          const rem = remainingDivPoints(spot, yld, copy.today, c.expiry, copy);
+          const raw = spot - c.last;
+          const corrected = raw - rem;
+          const ann = (basis, dayCount) => {
+            if (!c.days_to_expiry || c.days_to_expiry <= 0 || spot <= 0) return null;
+            return (basis / spot) * (dayCount / c.days_to_expiry);
+          };
+          c.remaining_div_points = rem;
+          c.raw_basis = raw;
+          c.corrected_basis = corrected;
+          c.raw_ann_365 = ann(raw, 365);
+          c.raw_ann_252 = ann(raw, 252);
+          c.corr_ann_365 = ann(corrected, 365);
+          c.corr_ann_252 = ann(corrected, 252);
+          c.excess_ann_365 = c.corr_ann_365 == null ? null : c.corr_ann_365 - rf;
+          c.excess_ann_252 = c.corr_ann_252 == null ? null : c.corr_ann_252 - rf;
+          c.contract_mv = c.last * (c.multiplier || p.multiplier);
+          c.contract_mv_fmt = fmtMV(c.contract_mv);
+          c.oi_notional = c.oi == null ? null : c.oi * c.last * (c.multiplier || p.multiplier);
+          c.oi_notional_fmt = c.oi_notional == null ? null : fmtMV(c.oi_notional);
+        }
+      }
+      return copy;
+    }
+
+    function renderSummary(data) {
+      const el = $("summary");
+      el.innerHTML = (data.products || []).map(p => {
+        const front = (p.contracts || [])[0] || {};
+        return `<div class="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="font-bold">${p.code}</span>
+            <span class="text-xs text-slate-500">${p.name}</span>
+          </div>
+          <div class="mt-1 text-xs text-slate-500">${front.code || "—"} · 当月</div>
+          <div class="mt-2 text-lg font-semibold num ${basisClass(front.corr_ann_365)}">${pct(front.corr_ann_365)}</div>
+          <div class="text-[11px] text-slate-500">矫正年化 365 · 原始基差 <span class="num ${basisClass(front.raw_basis)}">${num(front.raw_basis, 1)}</span></div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderProduct(p) {
+      const rows = (p.contracts || []).map(c => {
+        const bc = basisClass(c.raw_basis);
+        const err = c.error ? `<div class="text-[10px] text-red-400">${c.error}</div>` : "";
+        return `<tr class="border-b border-slate-800/80 hover:bg-slate-800/40">
+          <td class="px-2 py-2.5 text-slate-400 text-xs">${c.label || "—"}${err}</td>
+          <td class="px-2 py-2.5 font-semibold num">${c.code || "—"}</td>
+          <td class="px-2 py-2.5 num text-right">${num(c.last, 1)}</td>
+          <td class="px-2 py-2.5 num text-right text-slate-300">${c.contract_mv_fmt || "—"}</td>
+          <td class="px-2 py-2.5 num text-right">${c.oi != null ? Number(c.oi).toLocaleString("zh-CN") : "—"}</td>
+          <td class="px-2 py-2.5 num text-right text-slate-400 text-xs">${c.oi_notional_fmt || "—"}</td>
+          <td class="px-2 py-2.5 num text-right text-xs">${c.expiry || "—"}</td>
+          <td class="px-2 py-2.5 num text-right">${c.days_to_expiry ?? "—"}</td>
+          <td class="px-2 py-2.5 num text-right">${num(c.spot, 2)}</td>
+          <td class="px-2 py-2.5 num text-right ${bc}">${num(c.raw_basis, 2)}${badge(c.raw_basis)}</td>
+          <td class="px-2 py-2.5 num text-right text-amber-300/90">${num(c.remaining_div_points, 2)}</td>
+          <td class="px-2 py-2.5 num text-right ${basisClass(c.corrected_basis)} font-medium">${num(c.corrected_basis, 2)}</td>
+          <td class="px-2 py-2.5 num text-right ${basisClass(c.corr_ann_365)} font-semibold">${pct(c.corr_ann_365)}</td>
+          <td class="px-2 py-2.5 num text-right ${basisClass(c.corr_ann_252)}">${pct(c.corr_ann_252)}</td>
+          <td class="px-2 py-2.5 num text-right warn-raw text-xs" title="未扣分红，易误导">${pct(c.raw_ann_365)}</td>
+          <td class="px-2 py-2.5 num text-right text-sky-300 text-xs">${pct(c.excess_ann_365)}</td>
+        </tr>`;
+      }).join("");
+
+      return `
+      <section class="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 bg-slate-800/50">
+          <div class="flex items-center gap-3">
+            <span class="text-lg font-bold">${p.code}</span>
+            <span class="text-slate-300">${p.name}</span>
+            <span class="text-xs text-slate-500">现货 ${p.spot_code}</span>
+          </div>
+          <div class="flex flex-wrap gap-4 text-xs text-slate-400">
+            <span>现货点位 <strong class="text-slate-100 num text-sm">${num(p.spot, 2)}</strong></span>
+            <span>股息率 <strong class="text-emerald-300/90">${num(p.dividend_yield_pct, 2)}%</strong> <span class="text-slate-600">估算</span></span>
+            <span>年化分红点 <strong class="num">${num(p.annual_div_points, 1)}</strong></span>
+            <span>乘数 ${p.multiplier}</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs text-slate-500 border-b border-slate-700 bg-slate-950/50">
+                <th class="px-2 py-2 text-left font-medium">类型</th>
+                <th class="px-2 py-2 text-left font-medium">合约</th>
+                <th class="px-2 py-2 text-right font-medium">最新价</th>
+                <th class="px-2 py-2 text-right font-medium">合约市值</th>
+                <th class="px-2 py-2 text-right font-medium">持仓量</th>
+                <th class="px-2 py-2 text-right font-medium">持仓名义</th>
+                <th class="px-2 py-2 text-right font-medium">到期日</th>
+                <th class="px-2 py-2 text-right font-medium">剩余日</th>
+                <th class="px-2 py-2 text-right font-medium">现货</th>
+                <th class="px-2 py-2 text-right font-medium">原始基差</th>
+                <th class="px-2 py-2 text-right font-medium">期内分红</th>
+                <th class="px-2 py-2 text-right font-medium">矫正基差</th>
+                <th class="px-2 py-2 text-right font-medium">年化(365)</th>
+                <th class="px-2 py-2 text-right font-medium">年化(252)</th>
+                <th class="px-2 py-2 text-right font-medium text-red-400">原始年化⚠</th>
+                <th class="px-2 py-2 text-right font-medium">超额年化</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </section>`;
+    }
+
+    function render(data) {
+      $("ts").textContent = data.timestamp || "—";
+      const view = recompute(data);
+      renderSummary(view);
+      const el = $("products");
+      if (view.error) {
+        el.innerHTML = `<div class="text-red-400 p-6">${view.error}</div>`;
+        return;
+      }
+      el.innerHTML = (view.products || []).map(renderProduct).join("");
+    }
+
+    async function refresh() {
+      $("status").textContent = "拉取中…";
+      $("status").className = "px-2 py-0.5 rounded bg-blue-900/50 text-blue-300 text-xs";
+      try {
+        const res = await fetch("data/latest.json?t=" + Date.now());
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (!data.products || !data.products.length) throw new Error("快照为空");
+        snapshot = data;
+        render(data);
+        $("status").textContent = "快照已加载";
+        $("status").className = "px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-300 text-xs";
+      } catch (e) {
+        $("status").textContent = "失败";
+        $("status").className = "px-2 py-0.5 rounded bg-red-900/50 text-red-300 text-xs";
+        if (!snapshot) {
+          $("products").innerHTML = `<div class="text-red-400 p-6">无法读取 data/latest.json：${e.message}</div>`;
+        }
+      }
+    }
+
+    function schedule() {
+      if (timer) clearInterval(timer);
+      const sec = parseInt($("interval").value, 10);
+      if (sec > 0) timer = setInterval(refresh, sec * 1000);
+    }
+
+    $("btnRefresh").addEventListener("click", refresh);
+    $("btnReset").addEventListener("click", () => {
+      $("rf").value = DEFAULTS.rf;
+      ["IH", "IF", "IC", "IM"].forEach(p => { $("yield_" + p).value = DEFAULTS[p]; });
+      if (snapshot) render(snapshot);
+    });
+    $("interval").addEventListener("change", schedule);
+    ["rf", "yield_IH", "yield_IF", "yield_IC", "yield_IM"].forEach(id => {
+      $(id).addEventListener("input", () => { if (snapshot) render(snapshot); });
+    });
+
+    refresh();
+    schedule();
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+name: Update CFFEX basis
+
+on:
+  schedule:
+    # Weekday Asia/Shanghai daytime, every 30 minutes.
+    # 01:01–07:31 UTC ≈ 09:01–15:31 China Standard Time, minutes 1 and 31.
+    - cron: "1,31 1-7 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-basis
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch basis snapshot
+        run: python scripts/fetch_basis.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json
+          if git diff --cached --quiet; then
+            echo "data/latest.json unchanged"
+          else
+            git commit -m "data: update CFFEX basis snapshot"
+            git push
+          fi

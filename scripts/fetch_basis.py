@@ -1,0 +1,474 @@
+#!/usr/bin/env python3
+"""Fetch CFFEX equity-index futures basis and write data/latest.json.
+
+Methodology (分红矫正年化贴水), same as the reference server:
+
+    原始基差 = 现货 − 期货          （正 = 贴水）
+    矫正基差 = 原始基差 − 期内分红点数
+    年化     = 矫正基差 / 现货 × (365|252) / 剩余自然日
+
+期内分红点数 = 现货 × 年化股息率 × 剩余期限内的 A 股季节性权重
+（5–7 月高峰，按日比例摊入）。
+
+Spot:  sh000016/IH, sh000300/IF, sh000905/IC, sh000852/IM
+Futures: CFF_RE_{CODE} on hq.sinajs.cn (Referer: finance.sina.com.cn)
+
+Stdlib only. Exits non-zero on failure and does not overwrite a good snapshot.
+"""
+
+from __future__ import annotations
+
+import calendar
+import json
+import math
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT_PATH = ROOT / "data" / "latest.json"
+
+PRODUCTS = {
+    "IH": {
+        "name": "上证50",
+        "spot_code": "sh000016",
+        "multiplier": 300,
+        "default_yield": 0.023,
+    },
+    "IF": {
+        "name": "沪深300",
+        "spot_code": "sh000300",
+        "multiplier": 300,
+        "default_yield": 0.021,
+    },
+    "IC": {
+        "name": "中证500",
+        "spot_code": "sh000905",
+        "multiplier": 200,
+        "default_yield": 0.0105,
+    },
+    "IM": {
+        "name": "中证1000",
+        "spot_code": "sh000852",
+        "multiplier": 200,
+        "default_yield": 0.0092,
+    },
+}
+
+_RAW_SEASONALITY = {
+    1: 0.02,
+    2: 0.02,
+    3: 0.05,
+    4: 0.08,
+    5: 0.22,
+    6: 0.25,
+    7: 0.18,
+    8: 0.08,
+    9: 0.04,
+    10: 0.02,
+    11: 0.02,
+    12: 0.02,
+}
+_SEASON_SUM = sum(_RAW_SEASONALITY.values())
+SEASONALITY = {m: w / _SEASON_SUM for m, w in _RAW_SEASONALITY.items()}
+
+DEFAULT_RF = 0.015
+QUARTER_MONTHS = {3, 6, 9, 12}
+
+SINA_HEADERS = {
+    "Referer": "https://finance.sina.com.cn",
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+}
+
+
+def third_friday(year: int, month: int) -> date:
+    """CFFEX equity index futures expiry = 3rd Friday of the contract month."""
+    cal = calendar.Calendar(firstweekday=calendar.MONDAY)
+    fridays = [
+        d
+        for d in cal.itermonthdates(year, month)
+        if d.month == month and d.weekday() == calendar.FRIDAY
+    ]
+    return fridays[2]
+
+
+def contract_code(prefix: str, year: int, month: int) -> str:
+    return f"{prefix}{year % 100:02d}{month:02d}"
+
+
+def active_contracts(prefix: str, today: Optional[date] = None) -> List[Dict[str, Any]]:
+    """Return 4 active contracts: 当月、次月、当季、下季."""
+    today = today or date.today()
+    candidates: List[Tuple[int, int, date]] = []
+    y, m = today.year, today.month
+    for _ in range(18):
+        exp = third_friday(y, m)
+        if exp >= today:
+            candidates.append((y, m, exp))
+        if m == 12:
+            y, m = y + 1, 1
+        else:
+            m += 1
+
+    if len(candidates) < 2:
+        raise RuntimeError("Not enough active contract months")
+
+    result: List[Dict[str, Any]] = []
+    for i, label in enumerate(["当月", "次月"]):
+        y, m, exp = candidates[i]
+        result.append(
+            {
+                "label": label,
+                "code": contract_code(prefix, y, m),
+                "year": y,
+                "month": m,
+                "expiry": exp.isoformat(),
+                "days_to_expiry": (exp - today).days,
+            }
+        )
+
+    remaining = candidates[2:]
+    quarters = [(y, m, exp) for y, m, exp in remaining if m in QUARTER_MONTHS]
+    for i, label in enumerate(["当季", "下季"]):
+        if i >= len(quarters):
+            break
+        y, m, exp = quarters[i]
+        result.append(
+            {
+                "label": label,
+                "code": contract_code(prefix, y, m),
+                "year": y,
+                "month": m,
+                "expiry": exp.isoformat(),
+                "days_to_expiry": (exp - today).days,
+            }
+        )
+    return result
+
+
+def remaining_div_points(
+    spot: float,
+    annual_yield: float,
+    today: date,
+    expiry: date,
+) -> float:
+    """Day-fraction prorate of seasonal dividend points over (today, expiry]."""
+    if expiry <= today or spot <= 0 or annual_yield <= 0:
+        return 0.0
+    annual_pts = spot * annual_yield
+    total_weight = 0.0
+    y, m = today.year, today.month
+    while True:
+        days_in_month = calendar.monthrange(y, m)[1]
+        month_start = date(y, m, 1)
+        month_end = date(y, m, days_in_month)
+        range_start = max(today + timedelta(days=1), month_start)
+        range_end = min(expiry, month_end)
+        if range_start <= range_end:
+            n_days = (range_end - range_start).days + 1
+            day_frac = n_days / days_in_month
+            total_weight += SEASONALITY[m] * day_frac
+        if month_end >= expiry:
+            break
+        if m == 12:
+            y, m = y + 1, 1
+        else:
+            m += 1
+    return annual_pts * total_weight
+
+
+def fmt_market_value(yuan: Optional[float]) -> str:
+    if yuan is None or (isinstance(yuan, float) and math.isnan(yuan)):
+        return "—"
+    abs_y = abs(yuan)
+    if abs_y >= 1e8:
+        return f"{yuan / 1e8:.2f}亿元"
+    if abs_y >= 1e4:
+        return f"{yuan / 1e4:.2f}万元"
+    return f"{yuan:.0f}元"
+
+
+def fetch_sina(symbols: List[str]) -> Dict[str, List[str]]:
+    if not symbols:
+        return {}
+    url = "https://hq.sinajs.cn/list=" + ",".join(symbols)
+    last_err: Optional[BaseException] = None
+    raw = ""
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers=SINA_HEADERS)
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                raw = resp.read().decode("gbk", errors="replace")
+            if '="' in raw:
+                break
+            last_err = RuntimeError("empty Sina payload")
+        except (urllib.error.URLError, TimeoutError, RuntimeError) as exc:
+            last_err = exc
+        time.sleep(1.5 * (attempt + 1))
+    else:
+        raise RuntimeError(f"Sina fetch failed: {last_err}")
+
+    out: Dict[str, List[str]] = {}
+    for line in raw.strip().split("\n"):
+        line = line.strip()
+        if not line or '="' not in line:
+            continue
+        left, right = line.split("=", 1)
+        key = left.replace("var hq_str_", "").strip()
+        payload = right.strip()
+        if payload.startswith('"') and payload.endswith('";'):
+            payload = payload[1:-2]
+        elif payload.startswith('"') and payload.endswith('"'):
+            payload = payload[1:-1]
+        if not payload:
+            out[key] = []
+            continue
+        out[key] = payload.split(",")
+    return out
+
+
+def parse_spot(fields: List[str]) -> Optional[float]:
+    if not fields or len(fields) < 4:
+        return None
+    try:
+        value = float(fields[3])
+        return value if value > 0 else None
+    except ValueError:
+        return None
+
+
+def parse_futures(fields: List[str]) -> Dict[str, Any]:
+    result: Dict[str, Any] = {
+        "last": None,
+        "open": None,
+        "high": None,
+        "low": None,
+        "volume": None,
+        "oi": None,
+        "prev_oi": None,
+        "quote_date": None,
+        "quote_time": None,
+        "name": None,
+    }
+    if not fields or len(fields) < 4:
+        return result
+    try:
+        result["open"] = float(fields[0]) if fields[0] else None
+        result["high"] = float(fields[1]) if fields[1] else None
+        result["low"] = float(fields[2]) if fields[2] else None
+        result["last"] = float(fields[3]) if fields[3] else None
+        if len(fields) > 4 and fields[4]:
+            result["volume"] = int(float(fields[4]))
+        if len(fields) > 6 and fields[6]:
+            result["oi"] = int(float(fields[6]))
+        if len(fields) > 15 and fields[15]:
+            result["prev_oi"] = int(float(fields[15]))
+        if len(fields) > 36:
+            result["quote_date"] = fields[36] or None
+        if len(fields) > 37:
+            result["quote_time"] = fields[37] or None
+        if fields:
+            result["name"] = fields[-1] or None
+    except (ValueError, IndexError):
+        pass
+    return result
+
+
+def calc_basis_row(
+    spot: float,
+    fut_last: float,
+    multiplier: int,
+    oi: Optional[int],
+    days: int,
+    rem_div: float,
+    rf: float,
+) -> Dict[str, Any]:
+    contract_mv = fut_last * multiplier
+    oi_notional = (oi * fut_last * multiplier) if oi is not None else None
+    raw_basis = spot - fut_last
+    corrected_basis = raw_basis - rem_div
+
+    def ann(basis: float, day_count: int) -> Optional[float]:
+        if days <= 0 or spot <= 0:
+            return None
+        return (basis / spot) * (day_count / days)
+
+    raw_ann_365 = ann(raw_basis, 365)
+    raw_ann_252 = ann(raw_basis, 252)
+    corr_ann_365 = ann(corrected_basis, 365)
+    corr_ann_252 = ann(corrected_basis, 252)
+    excess_365 = (corr_ann_365 - rf) if corr_ann_365 is not None else None
+    excess_252 = (corr_ann_252 - rf) if corr_ann_252 is not None else None
+
+    return {
+        "last": round(fut_last, 2),
+        "contract_mv": contract_mv,
+        "contract_mv_fmt": fmt_market_value(contract_mv),
+        "oi": oi,
+        "oi_notional": oi_notional,
+        "oi_notional_fmt": fmt_market_value(oi_notional) if oi_notional is not None else None,
+        "spot": round(spot, 4),
+        "raw_basis": round(raw_basis, 4),
+        "remaining_div_points": round(rem_div, 4),
+        "corrected_basis": round(corrected_basis, 4),
+        "raw_ann_365": None if raw_ann_365 is None else round(raw_ann_365, 6),
+        "raw_ann_252": None if raw_ann_252 is None else round(raw_ann_252, 6),
+        "corr_ann_365": None if corr_ann_365 is None else round(corr_ann_365, 6),
+        "corr_ann_252": None if corr_ann_252 is None else round(corr_ann_252, 6),
+        "excess_ann_365": None if excess_365 is None else round(excess_365, 6),
+        "excess_ann_252": None if excess_252 is None else round(excess_252, 6),
+        "is_contango": raw_basis < 0,
+        "is_backwardation": raw_basis > 0,
+    }
+
+
+def build_basis_payload(today: Optional[date] = None, rf: float = DEFAULT_RF) -> Dict[str, Any]:
+    today = today or date.today()
+    all_contracts: Dict[str, List[Dict[str, Any]]] = {}
+    symbols: List[str] = []
+    for product, cfg in PRODUCTS.items():
+        symbols.append(cfg["spot_code"])
+        contracts = active_contracts(product, today)
+        all_contracts[product] = contracts
+        for contract in contracts:
+            symbols.append(f"CFF_RE_{contract['code']}")
+
+    quotes = fetch_sina(symbols)
+    products_out: List[Dict[str, Any]] = []
+    missing: List[str] = []
+
+    for product, cfg in PRODUCTS.items():
+        spot = parse_spot(quotes.get(cfg["spot_code"], []))
+        annual_yield = cfg["default_yield"]
+        annual_div_pts = (spot * annual_yield) if spot else None
+        if spot is None:
+            missing.append(cfg["spot_code"])
+
+        contracts_out: List[Dict[str, Any]] = []
+        for contract in all_contracts[product]:
+            fut = parse_futures(quotes.get(f"CFF_RE_{contract['code']}", []))
+            expiry = date.fromisoformat(contract["expiry"])
+            days = contract["days_to_expiry"]
+            row: Dict[str, Any] = {
+                "label": contract["label"],
+                "code": contract["code"],
+                "expiry": contract["expiry"],
+                "days_to_expiry": days,
+                "multiplier": cfg["multiplier"],
+                "quote_date": fut.get("quote_date"),
+                "quote_time": fut.get("quote_time"),
+                "volume": fut.get("volume"),
+            }
+            if spot is None or fut.get("last") is None:
+                row["error"] = "报价缺失"
+                row["last"] = fut.get("last")
+                row["spot"] = spot
+                missing.append(contract["code"])
+                contracts_out.append(row)
+                continue
+
+            rem_div = remaining_div_points(spot, annual_yield, today, expiry)
+            row.update(
+                calc_basis_row(
+                    spot=spot,
+                    fut_last=fut["last"],
+                    multiplier=cfg["multiplier"],
+                    oi=fut.get("oi"),
+                    days=days,
+                    rem_div=rem_div,
+                    rf=rf,
+                )
+            )
+            contracts_out.append(row)
+
+        products_out.append(
+            {
+                "code": product,
+                "name": cfg["name"],
+                "spot_code": cfg["spot_code"],
+                "spot": round(spot, 4) if spot else None,
+                "multiplier": cfg["multiplier"],
+                "dividend_yield": annual_yield,
+                "dividend_yield_pct": round(annual_yield * 100, 4),
+                "annual_div_points": round(annual_div_pts, 4) if annual_div_pts else None,
+                "contracts": contracts_out,
+            }
+        )
+
+    if missing:
+        raise RuntimeError("missing quotes: " + ", ".join(missing))
+
+    # JSON object keys must be strings.
+    seasonality = {str(m): round(w, 8) for m, w in SEASONALITY.items()}
+
+    return {
+        "timestamp": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z"),
+        "today": today.isoformat(),
+        "risk_free_rate": rf,
+        "risk_free_rate_pct": round(rf * 100, 4),
+        "products": products_out,
+        "seasonality": seasonality,
+        "methodology": {
+            "summary": (
+                "价格指数在成分股除息时自然回落，期货定价已隐含期内分红。"
+                "直接用 (现货−期货)/现货 年化会把「分红」误当成「贴水」。"
+                "必须用 矫正基差 = 原始基差 − 期内分红点数 再年化。"
+            ),
+            "raw_basis": "现货 − 期货（正=贴水，负=升水）",
+            "corrected_basis": "原始基差 − 期内分红点数",
+            "ann_365": "矫正基差 / 现货 × 365 / 剩余自然日",
+            "ann_252": "矫正基差 / 现货 × 252 / 剩余自然日",
+            "dividend_model": (
+                "年化股息点数 = 现货 × 股息率；按 A 股季节性权重"
+                "（5–7 月高峰）按日比例摊入剩余期限内。"
+            ),
+            "disclaimer": (
+                "股息为估算（默认 IH 2.3% / IF 2.1% / IC 1.05% / IM 0.92%），"
+                "非券商成分股逐笔预测。页面可改股息率后在本地重算。"
+                "周末/节假日为最近交易日收盘价。"
+            ),
+            "default_yields": {k: v["default_yield"] for k, v in PRODUCTS.items()},
+            "multipliers": {k: v["multiplier"] for k, v in PRODUCTS.items()},
+        },
+        "meta": {
+            "source": "Sina Finance (hq.sinajs.cn)",
+            "referer": "https://finance.sina.com.cn",
+            "contracts_per_product": 4,
+            "labels": ["当月", "次月", "当季", "下季"],
+            "update": "GitHub Actions cron 1,31 1-7 * * 1-5 UTC（约北京时间交易日 09:01–15:31，每 30 分钟）",
+        },
+    }
+
+
+def main() -> int:
+    try:
+        payload = build_basis_payload()
+    except Exception as exc:  # noqa: BLE001 — surface fetch failures to Actions logs
+        print(f"fetch failed: {exc}", file=sys.stderr)
+        return 1
+
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    OUT_PATH.write_text(text, encoding="utf-8")
+    print(f"wrote {OUT_PATH} at {payload['timestamp']}")
+    for product in payload["products"]:
+        front = product["contracts"][0]
+        print(
+            f"  {product['code']} spot={product['spot']} "
+            f"{front['code']} last={front['last']} "
+            f"raw={front['raw_basis']} corr={front['corrected_basis']} "
+            f"ann365={front['corr_ann_365']}"
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
