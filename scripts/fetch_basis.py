@@ -13,11 +13,15 @@ Methodology (分红矫正年化贴水), same as the reference server:
 Spot:  sh000016/IH, sh000300/IF, sh000905/IC, sh000852/IM
 Futures: CFF_RE_{CODE} on hq.sinajs.cn (Referer: finance.sina.com.cn)
 
-Historical percentile (近3年, same tenor label):
+Historical percentiles (近3年, same calendar lookback):
 
-    历史分位 = 样本中 corr_ann_365 ≤ 当前值的占比（0–100%）
-    样本     = 该品种该期限、行情日往前 3 个日历年的交易日，不含行情日当天
-    分位越高 = 当前越贴水（相对该期限自身历史更便宜）
+    贴水分位     = 样本中 corr_ann_365 ≤ 当前值的占比（0–100%）
+    样本         = 该品种该期限、行情日往前 3 个日历年的交易日，不含行情日当天
+    分位越高     = 当前越贴水（相对该期限自身历史更便宜）
+
+    指数点位分位 = 样本中指数收盘 ≤ 当日现货的占比（0–100%）
+    样本         = 同一日历窗口内、各期限按交易日去重后的指数收盘
+    分位越高     = 指数越接近这段窗口的历史高位（不是贴水）
 
 Daily runs append the session close into data/history/series.json.
 `--rebuild-history` refetches Sina daily bars (futures + index) and reseeds
@@ -484,7 +488,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             f"{front['code']} last={front['last']} "
             f"raw={front['raw_basis']} corr={front['corrected_basis']} "
             f"ann365={front['corr_ann_365']} "
-            f"pct={front.get('hist_pct')} N={front.get('hist_n')}"
+            f"pct={front.get('hist_pct')} N={front.get('hist_n')} "
+            f"spot_pct={product.get('spot_pct')} spot_n={product.get('spot_n')}"
         )
     return 0
 

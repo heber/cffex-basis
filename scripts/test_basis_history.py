@@ -61,6 +61,26 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(bh.percentile_leq([1, 2, 3], 4), 100)
         self.assertEqual(bh.percentile_leq([0.2, 0.2, 0.2], 0.2), 100)
 
+    def test_spot_sample_counts_each_index_day_once(self) -> None:
+        labels = {label: [] for label in bh.LABELS}
+        labels["当月"] = [
+            [20231008, 100.0, 1, 10, 0.1],
+            [20231009, 110.0, 1, 10, 0.1],
+            [20261008, 130.0, 1, 10, 0.1],
+            [20261009, 999.0, 1, 10, 0.1],
+        ]
+        labels["次月"] = [
+            [20231009, 110.0, 1, 20, 0.1],
+            [20240102, 120.0, 1, 20, 0.1],
+        ]
+        sample, first, last = bh.select_spot_sample(labels, date(2026, 10, 9))
+        self.assertEqual(sample, [110.0, 120.0, 130.0])
+        self.assertEqual(first, date(2023, 10, 9))
+        self.assertEqual(last, date(2026, 10, 8))
+        self.assertEqual(bh.round1(bh.percentile_leq(sample, 120.0)), 66.7)
+        self.assertEqual(bh.percentile_leq(sample, 130.0), 100)
+        self.assertEqual(bh.percentile_leq(sample, 100.0), 0)
+
     def test_sample_excludes_quote_date_and_uses_three_calendar_years(self) -> None:
         rows = [
             [20231008, 1, 1, 10, 0.01],
@@ -122,6 +142,7 @@ class HistoryTests(unittest.TestCase):
             "products": [
                 {
                     "code": "IH",
+                    "spot": 3000.0,
                     "contracts": [
                         {
                             "label": "当月",
@@ -154,7 +175,14 @@ class HistoryTests(unittest.TestCase):
         front_row = payload["products"][0]["contracts"][0]
         self.assertEqual(front_row["hist_n"], 40)
         self.assertEqual(front_row["hist_pct"], 50.0)  # 0.01..0.40, 20 values <= 0.20
-        self.assertTrue(payload["products"][0]["contracts"][1]["is_main"])
+        product = payload["products"][0]
+        self.assertEqual(product["spot_n"], 40)
+        self.assertEqual(product["spot_pct"], 100.0)  # every stored close equals today's spot
+        self.assertEqual(product["spot_start"], "2026-08-01")
+        self.assertEqual(product["spot_end"], "2026-09-09")
+        self.assertIn("高位", payload["history_meta"]["spot_higher_means"])
+        self.assertIn("贴水分位", payload["history_meta"]["higher_means"])
+        self.assertTrue(product["contracts"][1]["is_main"])
         self.assertNotIn("is_main", front_row)
         self.assertIn("越高", payload["history_meta"]["higher_means"])
 
