@@ -5,7 +5,7 @@ Methodology (分红矫正年化贴水), same as the reference server:
 
     原始基差 = 现货 − 期货          （正 = 贴水）
     矫正基差 = 原始基差 − 期内分红点数
-    年化     = 矫正基差 / 现货 × (365|252) / 剩余自然日
+    年化     = 矫正基差 / 现货 × 365 / 剩余自然日
 
 期内分红点数 = 现货 × 年化股息率 × 剩余期限内的 A 股季节性权重
 （5–7 月高峰，按日比例摊入）。
@@ -76,7 +76,6 @@ _RAW_SEASONALITY = {
 _SEASON_SUM = sum(_RAW_SEASONALITY.values())
 SEASONALITY = {m: w / _SEASON_SUM for m, w in _RAW_SEASONALITY.items()}
 
-DEFAULT_RF = 0.015
 QUARTER_MONTHS = {3, 6, 9, 12}
 
 SINA_HEADERS = {
@@ -289,24 +288,19 @@ def calc_basis_row(
     oi: Optional[int],
     days: int,
     rem_div: float,
-    rf: float,
 ) -> Dict[str, Any]:
     contract_mv = fut_last * multiplier
     oi_notional = (oi * fut_last * multiplier) if oi is not None else None
     raw_basis = spot - fut_last
     corrected_basis = raw_basis - rem_div
 
-    def ann(basis: float, day_count: int) -> Optional[float]:
+    def ann365(basis: float) -> Optional[float]:
         if days <= 0 or spot <= 0:
             return None
-        return (basis / spot) * (day_count / days)
+        return (basis / spot) * (365 / days)
 
-    raw_ann_365 = ann(raw_basis, 365)
-    raw_ann_252 = ann(raw_basis, 252)
-    corr_ann_365 = ann(corrected_basis, 365)
-    corr_ann_252 = ann(corrected_basis, 252)
-    excess_365 = (corr_ann_365 - rf) if corr_ann_365 is not None else None
-    excess_252 = (corr_ann_252 - rf) if corr_ann_252 is not None else None
+    raw_ann_365 = ann365(raw_basis)
+    corr_ann_365 = ann365(corrected_basis)
 
     return {
         "last": round(fut_last, 2),
@@ -320,17 +314,13 @@ def calc_basis_row(
         "remaining_div_points": round(rem_div, 4),
         "corrected_basis": round(corrected_basis, 4),
         "raw_ann_365": None if raw_ann_365 is None else round(raw_ann_365, 6),
-        "raw_ann_252": None if raw_ann_252 is None else round(raw_ann_252, 6),
         "corr_ann_365": None if corr_ann_365 is None else round(corr_ann_365, 6),
-        "corr_ann_252": None if corr_ann_252 is None else round(corr_ann_252, 6),
-        "excess_ann_365": None if excess_365 is None else round(excess_365, 6),
-        "excess_ann_252": None if excess_252 is None else round(excess_252, 6),
         "is_contango": raw_basis < 0,
         "is_backwardation": raw_basis > 0,
     }
 
 
-def build_basis_payload(today: Optional[date] = None, rf: float = DEFAULT_RF) -> Dict[str, Any]:
+def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
     today = today or date.today()
     all_contracts: Dict[str, List[Dict[str, Any]]] = {}
     symbols: List[str] = []
@@ -384,7 +374,6 @@ def build_basis_payload(today: Optional[date] = None, rf: float = DEFAULT_RF) ->
                     oi=fut.get("oi"),
                     days=days,
                     rem_div=rem_div,
-                    rf=rf,
                 )
             )
             contracts_out.append(row)
@@ -412,8 +401,6 @@ def build_basis_payload(today: Optional[date] = None, rf: float = DEFAULT_RF) ->
     return {
         "timestamp": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z"),
         "today": today.isoformat(),
-        "risk_free_rate": rf,
-        "risk_free_rate_pct": round(rf * 100, 4),
         "products": products_out,
         "seasonality": seasonality,
         "methodology": {
@@ -424,8 +411,7 @@ def build_basis_payload(today: Optional[date] = None, rf: float = DEFAULT_RF) ->
             ),
             "raw_basis": "现货 − 期货（正=贴水，负=升水）",
             "corrected_basis": "原始基差 − 期内分红点数",
-            "ann_365": "矫正基差 / 现货 × 365 / 剩余自然日",
-            "ann_252": "矫正基差 / 现货 × 252 / 剩余自然日",
+            "ann_365": "矫正基差 / 现货 × 365 / 剩余自然日（仅自然日，不含无风险利率）",
             "dividend_model": (
                 "年化股息点数 = 现货 × 股息率；按 A 股季节性权重"
                 "（5–7 月高峰）按日比例摊入剩余期限内。"

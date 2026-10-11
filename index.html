@@ -72,9 +72,6 @@
     <section class="rounded-xl border border-slate-700 bg-slate-900 p-4 md:p-5">
       <h2 class="text-sm font-semibold text-slate-300 mb-3">参数控制</h2>
       <div class="flex flex-wrap gap-4 items-end">
-        <label class="text-xs text-slate-400">无风险利率 %
-          <input id="rf" type="number" step="0.1" value="1.5" class="input-sm block mt-1" />
-        </label>
         <label class="text-xs text-slate-400">IH 股息率 % <span class="text-slate-500">默认 2.3</span>
           <input id="yield_IH" type="number" step="0.01" value="2.3" class="input-sm block mt-1" />
         </label>
@@ -104,7 +101,7 @@
       </div>
       <p class="text-xs text-slate-500 mt-3">
         现货与期货价格来自仓库里的 <code class="text-slate-400">data/latest.json</code>（GitHub Action 在交易日约每 30 分钟更新）。
-        修改股息率或无风险利率后，页面用同一季节性分红模型在浏览器里重算，不再请求行情服务器。
+        修改股息率后，页面用同一季节性分红模型在浏览器里重算矫正基差与年化贴水（自然日 365），不再请求行情服务器。
         默认股息率：IH 2.3%、IF 2.1%、IC 1.05%、IM 0.92%（估算，5–7 月分红高峰）。
       </p>
     </section>
@@ -121,9 +118,7 @@
         <li><strong class="text-slate-300">原始基差</strong> = 现货 − 期货（正 = 贴水，负 = 升水）</li>
         <li><strong class="text-slate-300">期内分红点数</strong> = 现货 × 年化股息率 × 剩余期限内季节性权重之和（5–7 月高峰，按日比例）</li>
         <li><strong class="text-slate-300">矫正基差</strong> = 原始基差 − 期内分红点数</li>
-        <li><strong class="text-slate-300">年化贴水率（365）</strong> = 矫正基差 / 现货 × 365 / 剩余自然日</li>
-        <li><strong class="text-slate-300">年化贴水率（252）</strong> = 矫正基差 / 现货 × 252 / 剩余自然日</li>
-        <li><strong class="text-slate-300">超额年化</strong> = 矫正年化 − 无风险利率（资金成本）</li>
+        <li><strong class="text-slate-300">年化贴水率</strong> = 矫正基差 / 现货 × 365 / 剩余自然日（只用自然日 365，不含无风险利率）</li>
         <li><strong class="text-slate-300">合约市值</strong> = 最新价 × 乘数（IH/IF = 300，IC/IM = 200）；持仓名义 = 持仓 × 价 × 乘数</li>
         <li><strong class="text-slate-300">到期日</strong> = 合约月份第三个周五；活跃合约 = 当月 / 次月 / 当季 / 下季</li>
         <li><span class="warn-raw">原始年化</span>未扣分红，近月在分红季会明显偏高，容易误导</li>
@@ -136,7 +131,7 @@
   </main>
 
   <script>
-    const DEFAULTS = { rf: 1.5, IH: 2.3, IF: 2.1, IC: 1.05, IM: 0.92 };
+    const DEFAULTS = { IH: 2.3, IF: 2.1, IC: 1.05, IM: 0.92 };
     let timer = null;
     let snapshot = null;
 
@@ -219,16 +214,11 @@
         const v = parseFloat($("yield_" + p).value);
         yields[p] = Number.isNaN(v) ? DEFAULTS[p] / 100 : v / 100;
       });
-      const rfPct = parseFloat($("rf").value);
-      return {
-        rf: Number.isNaN(rfPct) ? DEFAULTS.rf / 100 : rfPct / 100,
-        yields,
-      };
+      return { yields };
     }
 
     function inputsMatchSnapshot(data) {
-      const { rf, yields } = readInputs();
-      if (Math.abs(rf - data.risk_free_rate) > 1e-6) return false;
+      const { yields } = readInputs();
       for (const p of data.products || []) {
         if (Math.abs((yields[p.code] ?? p.dividend_yield) - p.dividend_yield) > 1e-6) return false;
       }
@@ -237,10 +227,8 @@
 
     function recompute(data) {
       if (inputsMatchSnapshot(data)) return data;
-      const { rf, yields } = readInputs();
+      const { yields } = readInputs();
       const copy = JSON.parse(JSON.stringify(data));
-      copy.risk_free_rate = rf;
-      copy.risk_free_rate_pct = rf * 100;
       for (const p of copy.products || []) {
         const yld = yields[p.code] ?? p.dividend_yield;
         p.dividend_yield = yld;
@@ -252,19 +240,15 @@
           const rem = remainingDivPoints(spot, yld, copy.today, c.expiry, copy);
           const raw = spot - c.last;
           const corrected = raw - rem;
-          const ann = (basis, dayCount) => {
+          const ann365 = (basis) => {
             if (!c.days_to_expiry || c.days_to_expiry <= 0 || spot <= 0) return null;
-            return (basis / spot) * (dayCount / c.days_to_expiry);
+            return (basis / spot) * (365 / c.days_to_expiry);
           };
           c.remaining_div_points = rem;
           c.raw_basis = raw;
           c.corrected_basis = corrected;
-          c.raw_ann_365 = ann(raw, 365);
-          c.raw_ann_252 = ann(raw, 252);
-          c.corr_ann_365 = ann(corrected, 365);
-          c.corr_ann_252 = ann(corrected, 252);
-          c.excess_ann_365 = c.corr_ann_365 == null ? null : c.corr_ann_365 - rf;
-          c.excess_ann_252 = c.corr_ann_252 == null ? null : c.corr_ann_252 - rf;
+          c.raw_ann_365 = ann365(raw);
+          c.corr_ann_365 = ann365(corrected);
           c.contract_mv = c.last * (c.multiplier || p.multiplier);
           c.contract_mv_fmt = fmtMV(c.contract_mv);
           c.oi_notional = c.oi == null ? null : c.oi * c.last * (c.multiplier || p.multiplier);
@@ -285,7 +269,7 @@
           </div>
           <div class="mt-1 text-xs text-slate-500">${front.code || "—"} · 当月</div>
           <div class="mt-2 text-lg font-semibold num ${basisClass(front.corr_ann_365)}">${pct(front.corr_ann_365)}</div>
-          <div class="text-[11px] text-slate-500">矫正年化 365 · 原始基差 <span class="num ${basisClass(front.raw_basis)}">${num(front.raw_basis, 1)}</span></div>
+          <div class="text-[11px] text-slate-500">年化贴水（365）· 原始基差 <span class="num ${basisClass(front.raw_basis)}">${num(front.raw_basis, 1)}</span></div>
         </div>`;
       }).join("");
     }
@@ -308,9 +292,7 @@
           <td class="px-2 py-2.5 num text-right text-amber-300/90">${num(c.remaining_div_points, 2)}</td>
           <td class="px-2 py-2.5 num text-right ${basisClass(c.corrected_basis)} font-medium">${num(c.corrected_basis, 2)}</td>
           <td class="px-2 py-2.5 num text-right ${basisClass(c.corr_ann_365)} font-semibold">${pct(c.corr_ann_365)}</td>
-          <td class="px-2 py-2.5 num text-right ${basisClass(c.corr_ann_252)}">${pct(c.corr_ann_252)}</td>
           <td class="px-2 py-2.5 num text-right warn-raw text-xs" title="未扣分红，易误导">${pct(c.raw_ann_365)}</td>
-          <td class="px-2 py-2.5 num text-right text-sky-300 text-xs">${pct(c.excess_ann_365)}</td>
         </tr>`;
       }).join("");
 
@@ -345,10 +327,8 @@
                 <th class="px-2 py-2 text-right font-medium">原始基差</th>
                 <th class="px-2 py-2 text-right font-medium">期内分红</th>
                 <th class="px-2 py-2 text-right font-medium">矫正基差</th>
-                <th class="px-2 py-2 text-right font-medium">年化(365)</th>
-                <th class="px-2 py-2 text-right font-medium">年化(252)</th>
+                <th class="px-2 py-2 text-right font-medium">年化贴水</th>
                 <th class="px-2 py-2 text-right font-medium text-red-400">原始年化⚠</th>
-                <th class="px-2 py-2 text-right font-medium">超额年化</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -398,12 +378,11 @@
 
     $("btnRefresh").addEventListener("click", refresh);
     $("btnReset").addEventListener("click", () => {
-      $("rf").value = DEFAULTS.rf;
       ["IH", "IF", "IC", "IM"].forEach(p => { $("yield_" + p).value = DEFAULTS[p]; });
       if (snapshot) render(snapshot);
     });
     $("interval").addEventListener("change", schedule);
-    ["rf", "yield_IH", "yield_IF", "yield_IC", "yield_IM"].forEach(id => {
+    ["yield_IH", "yield_IF", "yield_IC", "yield_IM"].forEach(id => {
       $(id).addEventListener("input", () => { if (snapshot) render(snapshot); });
     });
 

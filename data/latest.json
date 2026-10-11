@@ -1,8 +1,6 @@
 {
-  "timestamp": "2026-10-11 02:27:28 +0000",
+  "timestamp": "2026-10-11 11:06:08 +0800",
   "today": "2026-10-11",
-  "risk_free_rate": 0.015,
-  "risk_free_rate_pct": 1.5,
   "products": [
     {
       "code": "IH",
@@ -34,11 +32,7 @@
           "remaining_div_points": 0.2083,
           "corrected_basis": 4.647,
           "raw_ann_365": 0.126248,
-          "raw_ann_252": 0.087163,
           "corr_ann_365": 0.120832,
-          "corr_ann_252": 0.083424,
-          "excess_ann_365": 0.105832,
-          "excess_ann_252": 0.068424,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -62,11 +56,7 @@
           "remaining_div_points": 1.6941,
           "corrected_basis": 24.5612,
           "raw_ann_365": 0.085337,
-          "raw_ann_252": 0.058918,
           "corr_ann_365": 0.079831,
-          "corr_ann_252": 0.055116,
-          "excess_ann_365": 0.064831,
-          "excess_ann_252": 0.040116,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -90,11 +80,7 @@
           "remaining_div_points": 2.8745,
           "corrected_basis": 40.5808,
           "raw_ann_365": 0.083083,
-          "raw_ann_252": 0.057362,
           "corr_ann_365": 0.077588,
-          "corr_ann_252": 0.053567,
-          "excess_ann_365": 0.062588,
-          "excess_ann_252": 0.038567,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -118,11 +104,7 @@
           "remaining_div_points": 7.9777,
           "corrected_basis": 68.8776,
           "raw_ann_365": 0.062843,
-          "raw_ann_252": 0.043387,
           "corr_ann_365": 0.05632,
-          "corr_ann_252": 0.038884,
-          "excess_ann_365": 0.04132,
-          "excess_ann_252": 0.023884,
           "is_contango": false,
           "is_backwardation": true
         }
@@ -158,11 +140,7 @@
           "remaining_div_points": 0.2925,
           "corrected_basis": 9.1624,
           "raw_ann_365": 0.159872,
-          "raw_ann_252": 0.110377,
           "corr_ann_365": 0.154927,
-          "corr_ann_252": 0.106963,
-          "excess_ann_365": 0.139927,
-          "excess_ann_252": 0.091963,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -186,11 +164,7 @@
           "remaining_div_points": 2.3787,
           "corrected_basis": 42.0762,
           "raw_ann_365": 0.09396,
-          "raw_ann_252": 0.064871,
           "corr_ann_365": 0.088933,
-          "corr_ann_252": 0.0614,
-          "excess_ann_365": 0.073933,
-          "excess_ann_252": 0.0464,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -214,11 +188,7 @@
           "remaining_div_points": 4.0359,
           "corrected_basis": 68.419,
           "raw_ann_365": 0.090083,
-          "raw_ann_252": 0.062194,
           "corr_ann_365": 0.085065,
-          "corr_ann_252": 0.05873,
-          "excess_ann_365": 0.070065,
-          "excess_ann_252": 0.04373,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -242,11 +212,7 @@
           "remaining_div_points": 11.2012,
           "corrected_basis": 126.4537,
           "raw_ann_365": 0.073195,
-          "raw_ann_252": 0.050534,
           "corr_ann_365": 0.067239,
-          "corr_ann_252": 0.046422,
-          "excess_ann_365": 0.052239,
-          "excess_ann_252": 0.031422,
           "is_contango": false,
           "is_backwardation": true
         }
@@ -282,11 +248,7 @@
           "remaining_div_points": 0.2456,
           "corrected_basis": 17.1604,
           "raw_ann_365": 0.175236,
-          "raw_ann_252": 0.120985,
           "corr_ann_365": 0.172764,
-          "corr_ann_252": 0.119278,
-          "excess_ann_365": 0.157764,
-          "excess_ann_252": 0.104278,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -310,11 +272,7 @@
           "remaining_div_points": 1.9975,
           "corrected_basis": 90.2085,
           "raw_ann_365": 0.116036,
-          "raw_ann_252": 0.080113,
           "corr_ann_365": 0.113522,
-          "corr_ann_252": 0.078377,
-          "excess_ann_365": 0.098522,
-          "excess_ann_252": 0.063377,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -338,11 +296,7 @@
           "remaining_div_points": 3.3893,
           "corrected_basis": 136.6167,
           "raw_ann_365": 0.103641,
-          "raw_ann_252": 0.071555,
           "corr_ann_365": 0.101132,
-          "corr_ann_252": 0.069823,
-          "excess_ann_365": 0.086132,
-          "excess_ann_252": 0.054823,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -366,11 +320,7 @@
           "remaining_div_points": 9.4064,
           "corrected_basis": 292.1996,
           "raw_ann_365": 0.095486,
-          "raw_ann_252": 0.065924,
           "corr_ann_365": 0.092508,
-          "corr_ann_252": 0.063868,
-          "excess_ann_365": 0.077508,
-          "excess_ann_252": 0.048868,
           "is_contango": false,
           "is_backwardation": true
         }
@@ -406,11 +356,7 @@
           "remaining_div_points": 0.2124,
           "corrected_basis": 12.899,
           "raw_ann_365": 0.133754,
-          "raw_ann_252": 0.092345,
           "corr_ann_365": 0.131588,
-          "corr_ann_252": 0.09085,
-          "excess_ann_365": 0.116588,
-          "excess_ann_252": 0.07585,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -434,11 +380,7 @@
           "remaining_div_points": 1.7273,
           "corrected_basis": 79.3841,
           "raw_ann_365": 0.103431,
-          "raw_ann_252": 0.07141,
           "corr_ann_365": 0.101228,
-          "corr_ann_252": 0.069889,
-          "excess_ann_365": 0.086228,
-          "excess_ann_252": 0.054889,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -462,11 +404,7 @@
           "remaining_div_points": 2.9307,
           "corrected_basis": 137.1807,
           "raw_ann_365": 0.105098,
-          "raw_ann_252": 0.07256,
           "corr_ann_365": 0.102899,
-          "corr_ann_252": 0.071043,
-          "excess_ann_365": 0.087899,
-          "excess_ann_252": 0.056043,
           "is_contango": false,
           "is_backwardation": true
         },
@@ -490,11 +428,7 @@
           "remaining_div_points": 8.1337,
           "corrected_basis": 307.7777,
           "raw_ann_365": 0.101344,
-          "raw_ann_252": 0.069969,
           "corr_ann_365": 0.098734,
-          "corr_ann_252": 0.068167,
-          "excess_ann_365": 0.083734,
-          "excess_ann_252": 0.053167,
           "is_contango": false,
           "is_backwardation": true
         }
@@ -519,8 +453,7 @@
     "summary": "价格指数在成分股除息时自然回落，期货定价已隐含期内分红。直接用 (现货−期货)/现货 年化会把「分红」误当成「贴水」。必须用 矫正基差 = 原始基差 − 期内分红点数 再年化。",
     "raw_basis": "现货 − 期货（正=贴水，负=升水）",
     "corrected_basis": "原始基差 − 期内分红点数",
-    "ann_365": "矫正基差 / 现货 × 365 / 剩余自然日",
-    "ann_252": "矫正基差 / 现货 × 252 / 剩余自然日",
+    "ann_365": "矫正基差 / 现货 × 365 / 剩余自然日（仅自然日，不含无风险利率）",
     "dividend_model": "年化股息点数 = 现货 × 股息率；按 A 股季节性权重（5–7 月高峰）按日比例摊入剩余期限内。",
     "disclaimer": "股息为估算（默认 IH 2.3% / IF 2.1% / IC 1.05% / IM 0.92%），非券商成分股逐笔预测。页面可改股息率后在本地重算。周末/节假日为最近交易日收盘价。",
     "default_yields": {
