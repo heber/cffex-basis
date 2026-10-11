@@ -13,6 +13,16 @@ Methodology (分红矫正年化贴水), same as the reference server:
 Spot:  sh000016/IH, sh000300/IF, sh000905/IC, sh000852/IM
 Futures: CFF_RE_{CODE} on hq.sinajs.cn (Referer: finance.sina.com.cn)
 
+Historical percentile (近3年, same tenor label):
+
+    历史分位 = 样本中 corr_ann_365 ≤ 当前值的占比（0–100%）
+    样本     = 该品种该期限、行情日往前 3 个日历年的交易日，不含行情日当天
+    分位越高 = 当前越贴水（相对该期限自身历史更便宜）
+
+Daily runs append the session close into data/history/series.json.
+`--rebuild-history` refetches Sina daily bars (futures + index) and reseeds
+the store from the first available contract (about 2018-10; IM from 2022-07).
+
 Stdlib only. Exits non-zero on failure and does not overwrite a good snapshot.
 """
 
@@ -429,21 +439,43 @@ def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
             "referer": "https://finance.sina.com.cn",
             "contracts_per_product": 4,
             "labels": ["当月", "次月", "当季", "下季"],
-            "update": "GitHub Actions cron 1,31 1-7 * * 1-5 UTC（约北京时间交易日 09:01–15:31，每 30 分钟）",
+            "update": "GitHub Actions cron 0 8 * * 1-5 UTC（北京时间周一至周五 16:00），并追加 data/history/series.json",
         },
     }
 
 
-def main() -> int:
+def write_snapshot(payload: Dict[str, Any]) -> None:
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    OUT_PATH.write_text(text, encoding="utf-8")
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Fetch CFFEX basis and historical percentiles")
+    parser.add_argument(
+        "--rebuild-history",
+        action="store_true",
+        help="Refetch Sina daily bars and rebuild data/history/series.json",
+    )
+    args = parser.parse_args(argv)
+
     try:
         payload = build_basis_payload()
     except Exception as exc:  # noqa: BLE001 — surface fetch failures to Actions logs
         print(f"fetch failed: {exc}", file=sys.stderr)
         return 1
 
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
-    OUT_PATH.write_text(text, encoding="utf-8")
+    try:
+        import basis_history
+
+        basis_history.apply(payload, rebuild=args.rebuild_history)
+    except Exception as exc:  # noqa: BLE001 — keep a bad history file from replacing the snapshot
+        print(f"history failed: {exc}", file=sys.stderr)
+        return 1
+
+    write_snapshot(payload)
     print(f"wrote {OUT_PATH} at {payload['timestamp']}")
     for product in payload["products"]:
         front = product["contracts"][0]
@@ -451,7 +483,8 @@ def main() -> int:
             f"  {product['code']} spot={product['spot']} "
             f"{front['code']} last={front['last']} "
             f"raw={front['raw_basis']} corr={front['corrected_basis']} "
-            f"ann365={front['corr_ann_365']}"
+            f"ann365={front['corr_ann_365']} "
+            f"pct={front.get('hist_pct')} N={front.get('hist_n')}"
         )
     return 0
 
