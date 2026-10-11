@@ -2,9 +2,9 @@ name: Update CFFEX basis
 
 on:
   schedule:
-    # Weekday Asia/Shanghai daytime, every 30 minutes.
-    # 01:01–07:31 UTC ≈ 09:01–15:31 China Standard Time, minutes 1 and 31.
-    - cron: "1,31 1-7 * * 1-5"
+    # Weekdays at 16:00 Asia/Shanghai (08:00 UTC), after the cash close.
+    # Markets are closed on weekends, so this does not run Sat/Sun.
+    - cron: "0 8 * * 1-5"
   workflow_dispatch:
 
 permissions:

@@ -50,7 +50,7 @@
 
 `.github/workflows/update-basis.yml`：
 
-- 定时：`1,31 1-7 * * 1-5`（UTC）≈ 北京时间周一至周五 09:01–15:31，每 30 分钟
+- 定时：`0 8 * * 1-5`（UTC）= 北京时间周一至周五 16:00，每日一次
 - 也可在 Actions 页手动 `workflow_dispatch`
 - 脚本每次写入新的时间戳；`data/latest.json` 有变化才提交
 
