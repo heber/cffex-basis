@@ -45,9 +45,26 @@
           <h1 class="text-xl md:text-2xl font-bold tracking-tight">中国股指期货贴水跟踪<span class="text-emerald-400 text-base md:text-lg font-medium ml-2">（分红矫正）</span></h1>
           <p class="text-slate-400 text-sm mt-1">IH / IF / IC / IM · CFFEX 当月·次月·当季·下季 · 近3年贴水分位与指数点位分位 · 快照：新浪财经 → data/latest.json</p>
         </div>
-        <div class="flex items-center gap-3 text-sm">
-          <span id="ts" class="text-slate-400 num">—</span>
-          <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">待命</span>
+        <div class="flex flex-col items-stretch sm:items-end gap-1.5 text-sm min-w-[14rem]">
+          <div class="flex items-center justify-end gap-2">
+            <div class="text-right leading-tight">
+              <div class="text-[11px] text-slate-500">数据更新于</div>
+              <div id="ts" class="text-slate-100 num text-sm font-medium" title="">—</div>
+              <div id="quoteTs" class="text-[11px] text-slate-400 num mt-0.5"></div>
+            </div>
+            <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">待命</span>
+          </div>
+          <a id="btnDispatch"
+             href="https://github.com/zaviichen/cffex-basis/actions/workflows/update-basis.yml"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="inline-flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-100 text-sm font-medium transition max-w-full text-center"
+             title="打开 Update CFFEX basis 工作流页面。GitHub 需登录且有写权限，再点 Run workflow，分支选 main。">
+            手动刷新
+            <span class="text-slate-400 font-normal">/</span>
+            <span class="text-slate-300 font-normal">在 Actions 里运行</span>
+          </a>
+          <p class="text-[11px] text-slate-500 text-right leading-snug max-w-xs">GitHub 需登录且有写权限。打开后点 Run workflow，分支选 main。</p>
         </div>
       </div>
     </div>
@@ -102,7 +119,8 @@
         </button>
       </div>
       <p class="text-xs text-slate-500 mt-3">
-        现货与期货价格来自仓库里的 <code class="text-slate-400">data/latest.json</code>（GitHub Action 在交易日约每 30 分钟更新）。
+        现货与期货价格来自仓库里的 <code class="text-slate-400">data/latest.json</code>（工作日 16:00 北京时间由 GitHub Action 更新一次）。
+        页头「手动刷新」打开该工作流页面，不会在浏览器里直接拉行情；「重新加载」只重新读取已提交的快照。
         修改股息率后，页面用同一季节性分红模型在浏览器里重算矫正基差、年化贴水（自然日 365）和贴水分位，不再请求行情服务器。指数点位分位只看指数收盘，不随股息率变化。
         历史价格来自 <code class="text-slate-400">data/history/series.json</code>。
         默认股息率：IH 2.3%、IF 2.1%、IC 1.05%、IM 0.92%（估算，5–7 月分红高峰）。
@@ -567,8 +585,41 @@
       el.textContent = bits.join("。") + "。";
     }
 
+    function formatSnapshotTime(ts) {
+      if (!ts) return "—";
+      const m = String(ts).trim().match(
+        /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\s*([+-]\d{2})(?::?(\d{2}))?)?$/
+      );
+      if (!m) return String(ts);
+      const offset = m[3] ? `${m[3]}:${m[4] || "00"}` : "Z";
+      const d = new Date(`${m[1]}T${m[2]}${offset === "Z" ? "Z" : offset}`);
+      if (Number.isNaN(d.getTime())) return String(ts);
+      const parts = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+      }).formatToParts(d);
+      const get = (type) => (parts.find(p => p.type === type) || {}).value || "";
+      return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")} 北京时间`;
+    }
+
     function render(data) {
-      $("ts").textContent = data.timestamp || "—";
+      const rawTs = data.timestamp || "";
+      const tsEl = $("ts");
+      tsEl.textContent = formatSnapshotTime(rawTs);
+      tsEl.title = rawTs ? `data/latest.json timestamp：${rawTs}` : "";
+      const front = ((((data.products || [])[0] || {}).contracts || [])[0]) || {};
+      const quoteEl = $("quoteTs");
+      if (quoteEl) {
+        quoteEl.textContent = front.quote_date
+          ? `行情日 ${front.quote_date}${front.quote_time ? " " + front.quote_time : ""}`
+          : "";
+      }
       const adjusted = !inputsMatchSnapshot(data);
       const view = recompute(data);
       if (adjusted) {
