@@ -555,12 +555,49 @@ def load_series(path: Path = SERIES_PATH) -> Optional[Dict[str, Any]]:
     return doc
 
 
+# Header field order for the on-disk store. `series` is written last, by hand,
+# so each close stays on one line. Unknown keys are kept after this list.
+META_KEYS = (
+    "version",
+    "built_at",
+    "source",
+    "row",
+    "window",
+    "window_label",
+    "percentile_rule",
+    "higher_means",
+    "spot_percentile_rule",
+    "spot_higher_means",
+    "annualization",
+    "dividend_note",
+    "min_sample",
+    "yields",
+    "archive",
+)
+
+
+def metadata_for_dump(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Metadata in stable order. `series` is spliced in by dumps_doc."""
+    meta: Dict[str, Any] = {}
+    for key in META_KEYS:
+        if key in doc:
+            meta[key] = doc[key]
+    for key, value in doc.items():
+        if key == "series" or key in meta:
+            continue
+        meta[key] = value
+    return meta
+
+
 def dumps_doc(doc: Dict[str, Any]) -> str:
-    meta = {key: doc[key] for key in doc if key != "series"}
-    meta_txt = json.dumps(meta, ensure_ascii=False, indent=2)
-    head = meta_txt[:-1].rstrip()
-    if not head.endswith("}"):
+    # json.dumps has no trailing newline. The last character is the outer `}`.
+    # Peel that brace off and insert "series" before it. The field just before
+    # the brace may be an object (archive) or a string (a rule added after the
+    # file was first written); only the dump as a whole must end in `}`.
+    meta_txt = json.dumps(metadata_for_dump(doc), ensure_ascii=False, indent=2).rstrip()
+    if len(meta_txt) < 2 or not meta_txt.startswith("{") or not meta_txt.endswith("}"):
         raise RuntimeError("history metadata dump did not end in an object")
+    head = meta_txt[:-1].rstrip()
     lines = [head + ","]
     lines.append('  "series": {')
     products = list(doc["series"].items())

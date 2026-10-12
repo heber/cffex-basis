@@ -4,6 +4,8 @@ on:
   schedule:
     # Weekdays at 16:00 Asia/Shanghai (08:00 UTC), after the cash close.
     # Markets are closed on weekends, so this does not run Sat/Sun.
+    # GitHub may delay or skip a scheduled run entirely. Leave this cron
+    # as-is and use workflow_dispatch when a weekday session is missing.
     - cron: "0 8 * * 1-5"
   workflow_dispatch:
 
