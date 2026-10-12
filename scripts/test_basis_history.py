@@ -201,6 +201,79 @@ class HistoryTests(unittest.TestCase):
             again = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(again["series"]["IF"]["下季"], [])
 
+    def test_dumps_doc_when_last_metadata_field_is_a_string(self) -> None:
+        """A trailing string must not trip the outer-brace splice.
+
+        series.json written before the spot-rule fields existed loads with
+        `series` last. apply() then assigns those strings, so they become the
+        last metadata fields. The writer used to require the text left after
+        stripping one `}` to still end in `}`.
+        """
+        series = {code: {label: [] for label in bh.LABELS} for code in fb.PRODUCTS}
+        series["IF"]["当月"] = [[20261009, 4000.0, 3980.0, 7, 0.12]]
+        fresh = bh.new_document(series)
+        stored: dict = {}
+        for key in (
+            "version",
+            "built_at",
+            "source",
+            "row",
+            "window",
+            "window_label",
+            "percentile_rule",
+            "higher_means",
+            "annualization",
+            "dividend_note",
+            "min_sample",
+            "yields",
+            "archive",
+            "series",
+        ):
+            stored[key] = fresh[key]
+        stored["spot_percentile_rule"] = bh.SPOT_PERCENTILE_RULE
+        stored["spot_higher_means"] = bh.SPOT_HIGHER_MEANS
+        stored["custom_note"] = "plain string"
+        payload = {
+            "today": "2026-10-12",
+            "products": [
+                {
+                    "code": "IF",
+                    "spot": 4010.0,
+                    "contracts": [
+                        {
+                            "label": "当月",
+                            "code": "IF2610",
+                            "expiry": "2026-10-16",
+                            "quote_date": "2026-10-12",
+                            "spot": 4010.0,
+                            "last": 3990.0,
+                            "oi": 10,
+                            "corr_ann_365": 0.2,
+                        }
+                    ],
+                }
+            ],
+            "methodology": {},
+        }
+        bh.upsert_payload(stored, payload)
+        text = bh.dumps_doc(stored)
+        loaded = json.loads(text)
+        rows = loaded["series"]["IF"]["当月"]
+        self.assertEqual([row[0] for row in rows], [20261009, 20261012])
+        self.assertEqual(loaded["custom_note"], "plain string")
+        self.assertEqual(loaded["spot_higher_means"], bh.SPOT_HIGHER_MEANS)
+        self.assertLess(text.index('"spot_percentile_rule"'), text.index('"archive"'))
+        self.assertLess(text.index('"archive"'), text.index('"series"'))
+        self.assertEqual(loaded["archive"]["products"]["IF"]["end"], "2026-10-12")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "series.json"
+            bh.save_series(stored, path)
+            again = bh.load_series(path)
+            self.assertIsNotNone(again)
+            self.assertEqual(again["series"]["IF"]["当月"][-1][0], 20261012)
+            self.assertEqual(again["series"]["IH"]["下季"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

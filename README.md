@@ -89,7 +89,7 @@ python3 scripts/fetch_basis.py --rebuild-history
 
 `.github/workflows/update-basis.yml`：
 
-- 定时：`0 8 * * 1-5`（UTC）= 北京时间周一至周五 16:00，每日一次
+- 定时：`0 8 * * 1-5`（UTC）= 北京时间周一至周五 16:00，每日一次。GitHub 的 schedule 不保证每次都触发，繁忙时会延迟甚至整次跳过；cron 保持不变。若某个工作日没有新快照，用页头的手动刷新或 Actions 的 `workflow_dispatch` 补跑。
 - 也可在 Actions 页手动 `workflow_dispatch`
 - 脚本每次写入新的时间戳；`data/latest.json` 或 `data/history/` 有变化才提交
 - 每次运行把行情日收盘追加进 `data/history/series.json`（已有日期覆盖）
