@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中国商品期货贴水跟踪</title>
+  <meta name="description" content="SHFE、DCE、CZCE、INE、广期所活跃商品的近月代理现货、主力连续、次活跃远月年化贴水，以及近3年贴水分位和价格分位。静态页读取 data/latest.json。" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            disc: { DEFAULT: "#059669", light: "#d1fae5" },
+            cont: { DEFAULT: "#dc2626", light: "#fee2e2" },
+          },
+          fontFamily: {
+            sans: ['"Noto Sans SC"', "PingFang SC", "Microsoft YaHei", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+    .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    table { border-collapse: collapse; }
+    th, td { white-space: nowrap; }
+    /* overflow-x:auto is the sticky scrollport, so top must stay 0 or the
+       header row drops onto the first data row. Once the table fits, let the
+       viewport be the scrollport and pin the header under the site header. */
+    .table-wrap { overflow-x: auto; }
+    .overview thead th { position: sticky; top: 0; background: #0f172a; z-index: 10; }
+    .overview th:first-child, .overview td:first-child {
+      position: sticky; left: 0; background: #020617; z-index: 5;
+    }
+    .overview thead th:first-child { z-index: 15; background: #0f172a; top: 0; left: 0; }
+    .chip { border: 1px solid #334155; background: #0f172a; color: #cbd5e1; }
+    .chip[aria-pressed="true"] { background: #b45309; border-color: #d97706; color: white; }
+    .overview thead th { padding: 0; }
+    .overview thead .sort-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      width: 100%;
+      margin: 0;
+      padding: 0.5rem 0.75rem;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      line-height: inherit;
+      cursor: pointer;
+      text-align: inherit;
+    }
+    .overview thead .sort-btn-end { justify-content: flex-end; }
+    .overview thead .sort-btn:hover { color: #f8fafc; }
+    .overview thead .sort-btn:focus-visible {
+      outline: 2px solid #d97706;
+      outline-offset: -2px;
+      color: #f8fafc;
+    }
+    .sort-mark {
+      position: relative;
+      flex: 0 0 8px;
+      width: 8px;
+      height: 10px;
+      color: #64748b;
+    }
+    .sort-mark::before,
+    .sort-mark::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+    }
+    .sort-mark::before {
+      top: 0;
+      border-bottom: 4px solid currentColor;
+      opacity: 0.55;
+    }
+    .sort-mark::after {
+      bottom: 0;
+      border-top: 4px solid currentColor;
+      opacity: 0.55;
+    }
+    .overview thead th[aria-sort="ascending"] .sort-mark,
+    .overview thead th[aria-sort="descending"] .sort-mark { color: #fbbf24; }
+    .overview thead th[aria-sort="ascending"] .sort-mark::before,
+    .overview thead th[aria-sort="descending"] .sort-mark::after { opacity: 1; }
+    .overview thead th[aria-sort="ascending"] .sort-mark::after,
+    .overview thead th[aria-sort="descending"] .sort-mark::before { opacity: 0; }
+    .overview thead th[aria-sort="ascending"] .sort-btn,
+    .overview thead th[aria-sort="descending"] .sort-btn { color: #f8fafc; }
+    .row-virtual { background: rgba(6, 78, 59, 0.35); }
+    .row-far { background: rgba(12, 74, 110, 0.28); }
+    .row-spot { background: rgba(120, 53, 15, 0.35); }
+    @media (min-width: 1600px) {
+      .table-wrap { overflow: visible; }
+      .overview thead th,
+      .overview thead th:first-child { top: 5.25rem; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-30 backdrop-blur">
+    <div class="max-w-[96rem] mx-auto px-4 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">中国商品期货贴水跟踪</h1>
+          <p class="text-slate-400 text-sm mt-1">近月代理现货 · 主力连续 · 次活跃远月年化贴水 · 近 3 年分位 · <a class="underline hover:text-slate-200" href="../">股指贴水</a></p>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:w-auto sm:max-w-xl sm:justify-end">
+          <span id="ts" class="text-slate-400 num">—</span>
+          <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">加载中</span>
+          <a id="manualRefresh"
+             href="https://github.com/heber/cffex-basis/actions/workflows/update-commodity-basis.yml"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-describedby="manualRefreshNote"
+             class="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">手动刷新</a>
+          <span id="manualRefreshNote" class="max-w-full text-[11px] leading-snug text-slate-500">需要写入权限，打开后点 Run workflow</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[96rem] mx-auto px-4 py-6 space-y-6">
+    <section class="rounded-xl border border-amber-700/40 bg-amber-950/30 p-4 md:p-5">
+      <h2 class="text-amber-300 font-semibold mb-2">这不是股指分红模型</h2>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        商品没有分红可扣。远月比近月代理便宜，记为<span class="text-emerald-300">贴水</span>（近高远低）；远月更贵，记为<span class="text-red-300">升水</span>。
+        曲线来自仓储、资金和便利收益，库存一松就会翻转。交割月还有限仓和仓单，纸面价差不一定成交得了。
+      </p>
+      <p class="text-slate-300 text-sm leading-relaxed mt-2">
+        <strong class="text-amber-200">现货是近月代理，不是现金现货。</strong>
+        当天未到期合约里，离交割最近的一张就是现货代理。不使用港口价、品牌价或厂库价。
+        <strong class="text-slate-100">主力只有一条</strong>，仍是持仓量 + 成交量最高的合约，用来做价格分位，不改叫现货。
+        年化贴水用现货代理对<strong class="text-sky-300">次活跃远月</strong>：到期晚于主力、得分最高的一张，豆粕常常是近月对 5 月，而不是紧邻的下一月。
+      </p>
+      <div class="mt-3 flex flex-wrap gap-3 text-xs">
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span>贴水（远月更便宜）绿</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600"></span>升水（远月更贵）红</span>
+        <span class="text-slate-400">贴水分位越高 = 近 3 年里远月折价越深</span>
+        <span class="text-slate-400">价格分位越高 = 主力越接近近 3 年高位（不是贴水）</span>
+      </div>
+    </section>
+
+    <section class="flex flex-wrap items-center gap-2" id="filters"></section>
+    <p id="calendarNote" class="text-xs text-amber-200/80"></p>
+    <p id="summaryLine" class="text-sm text-slate-300"></p>
+
+    <section class="space-y-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-sm font-semibold text-slate-300">总览</h2>
+        <p class="text-xs text-slate-500 flex items-center gap-2">
+          <span>点击列名排序，再点切换升降序</span>
+          <button type="button" id="sortReset" class="underline underline-offset-2 hover:text-slate-300 hidden">恢复板块顺序</button>
+        </p>
+      </div>
+      <p class="text-xs text-slate-500">面值 = 主力最新价 × 乘数。保证金(最低) = 面值 × 交易所普通月份最低比例。期货公司通常更高，近交割月可能上调。</p>
+      <div class="table-wrap rounded-xl border border-slate-800">
+        <table class="overview min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+              <th class="font-medium" data-sort="name" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>品种</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium" data-sort="spot" aria-sort="none" scope="col" title="近月代理现货，不是港口或现金现货"><button type="button" class="sort-btn"><span>现货</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium" data-sort="main" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>主力</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium text-right" data-sort="price" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>最新</span></button></th>
+              <th class="font-medium text-right" data-sort="multiplier" aria-sort="none" scope="col" title="交易所合约乘数（交易单位）"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>乘数</span></button></th>
+              <th class="font-medium text-right" data-sort="notional" aria-sort="none" scope="col" title="面值 = 主力最新价 × 乘数"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>面值</span></button></th>
+              <th class="font-medium text-right" data-sort="margin" aria-sort="none" scope="col" title="交易所普通月份最低保证金，一手。期货公司通常更高"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>保证金(最低)</span></button></th>
+              <th class="font-medium text-right hidden sm:table-cell" data-sort="dte" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>剩余</span></button></th>
+              <th class="font-medium" data-sort="far" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>次活跃远月</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium text-right" data-sort="ann" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>年化贴水</span></button></th>
+              <th class="font-medium text-right" data-sort="basis" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>贴水分位</span></button></th>
+              <th class="font-medium text-right" data-sort="pricePct" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>价格分位</span></button></th>
+            </tr>
+          </thead>
+          <tbody id="overviewBody">
+            <tr><td colspan="12" class="px-3 py-8 text-center text-slate-500">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="cards" class="space-y-8"></div>
+
+    <footer class="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400 space-y-3">
+      <h2 class="text-slate-200 font-semibold">方法论与商品侧注意</h2>
+      <ul class="list-disc list-inside space-y-1.5 leading-relaxed">
+        <li><strong class="text-slate-300">现货</strong>：当天未到期、且有成交或持仓的合约里，到期日最早的一张。这是近月代理现货，不是港口价、品牌价或厂库现金价。并列时先比持仓+成交，再比持仓，再比成交。</li>
+        <li><strong class="text-slate-300">主力</strong>：每个交易日得分 = 持仓量 + 成交量，最高者即当天的腿。并列时先比持仓，再比成交，再取更近到期。领先换手就换月，并用比率拼接；末日价格就是可交易价。没有第二条「主力」。价格分位用这条序列，不把主力改叫现货。</li>
+        <li><strong class="text-slate-300">次活跃远月</strong>：到期月份晚于主力、得分最高的合约。年化贴水的远腿固定用这一张。曲线上其他行只是活跃期限，用来看结构。</li>
+        <li><strong class="text-slate-300">价差</strong> = 现货代理价 − 次活跃远月价。正数表示远月更便宜。远月到期不晚于现货代理时，价差留空。</li>
+        <li><strong class="text-slate-300">年化贴水</strong> = 价差 / 现货代理价 × 365 /（次活跃远月到期日 − 现货代理到期日）。正 = 贴水，负 = 升水。相距不足 7 个自然日不年化。不扣利率，不用 252。</li>
+        <li><strong class="text-slate-300">贴水分位</strong>：近 3 个日历年里，年化贴水 ≤ 今天的交易日占比，不含行情日当天。<strong class="text-emerald-300">越高 = 远月折价越深</strong>。低于 30 个交易日不显示。</li>
+        <li><strong class="text-slate-300">价格分位</strong>：同一窗口里，比率拼接后的主力价格 ≤ 今天可交易价的占比。<strong class="text-sky-300">越高 = 越接近这段窗口的高位</strong>。这不是贴水。</li>
+        <li><strong class="text-slate-300">乘数</strong>是交易所合约交易单位，例如铁矿石 100 吨/手、沪金 1000 克/手、原油 1000 桶/手。单位写在格子里。</li>
+        <li><strong class="text-slate-300">面值</strong> = 最新价 × 乘数，人民币。总览用主力最新价。详情里现货代理、主力、次活跃远月各算各的。原油按元/桶，不是美元。</li>
+        <li><strong class="text-slate-300">最低保证金</strong> = 面值 × 交易所普通月份最低投机比例。这是交易所下限，<strong class="text-amber-200">期货公司通常更高</strong>。近交割月比例可能上调，本页用静态底数，不按合约月份切换。比例截至快照里的 margin_as_of。</li>
+        <li><strong class="text-slate-300">到期日</strong>是工作日近似，未剔除春节、国庆等法定节假日：上期所金属和黑色为合约月 15 日遇周末顺延；原油、燃料油、低硫燃料油为交割月前最后一个工作日；大商所、郑商所、广期所按合约月第 10 个工作日。</li>
+        <li><strong class="text-slate-300">库存</strong>：新浪日 K 的结算价（结算为 0 时用收盘），存在 <code class="text-slate-400">data/history/series.json</code>。工作日 16:00（北京时间）的 Action 追加当天。快照曲线用最新价。</li>
+        <li>仓储和便利收益不是股息，可以在几周内从贴水变成升水税。交割月流动性会塌，个人客户常常不能持仓进入交割月。</li>
+        <li>远月便宜，有时是现货紧，有时是市场在定价「以后更松」（供给增加、需求见顶）。后一种贴水对长期多头不是股息。</li>
+        <li>季节会混进斜率：豆粕的 1/5/9、油脂、苹果、橡胶停割。黄金这类好储存的品种，持有成本下升水才是常态。</li>
+      </ul>
+      <p class="text-amber-500/90 text-xs leading-relaxed border-t border-slate-800 pt-3">
+        免责声明：本页是 GitHub Pages 静态站，不运行行情服务器。数字以最近一次提交的快照为准，周末和节假日沿用最近交易日。
+        仅供研究参考，不构成投资建议。数据来自新浪财经公开行情，可能延迟或缺失。
+        股指分红矫正贴水见 <a class="underline text-amber-200" href="../">cffex-basis</a>。
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const SECTORS = ["全部", "黑色", "油脂油料", "有色贵金属", "能源", "化工", "农产品", "新能源"];
+    const SORT_META = {
+      name: { label: "品种", type: "str", defaultDir: "asc", pick: (p) => p.name },
+      spot: { label: "现货", type: "str", defaultDir: "asc", pick: (p) => p.spot_proxy && p.spot_proxy.symbol },
+      main: { label: "主力", type: "str", defaultDir: "asc", pick: (p) => p.virtual && p.virtual.symbol },
+      price: { label: "最新", type: "num", defaultDir: "desc", pick: (p) => p.virtual ? p.virtual.price : null },
+      multiplier: { label: "乘数", type: "num", defaultDir: "desc", pick: (p) => p.multiplier },
+      notional: { label: "面值", type: "num", defaultDir: "desc", pick: (p) => productNotional(p) },
+      margin: { label: "保证金(最低)", type: "num", defaultDir: "desc", pick: (p) => productMargin(p) },
+      dte: { label: "剩余", type: "num", defaultDir: "asc", pick: (p) => p.virtual ? p.virtual.dte : null },
+      far: { label: "次活跃远月", type: "str", defaultDir: "asc", pick: (p) => p.far && p.far.symbol },
+      ann: { label: "年化贴水", type: "num", defaultDir: "desc", pick: (p) => p.far ? p.far.ann : null },
+      basis: { label: "贴水分位", type: "num", defaultDir: "desc", pick: (p) => p.basis_pct },
+      pricePct: { label: "价格分位", type: "num", defaultDir: "desc", pick: (p) => p.price_pct },
+    };
+    let SNAP = null;
+    let sector = "全部";
+    let sortKey = null;
+    let sortDir = "desc";
+
+    function $(id) { return document.getElementById(id); }
+
+    function fmtPctile(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      return Math.round(Number(v)) + "%";
+    }
+
+    function fmtAnn(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v) * 100;
+      const sign = n > 0 ? "+" : "";
+      return sign + n.toFixed(1) + "%";
+    }
+
+    function fmtPx(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v);
+      const abs = Math.abs(n);
+      const digits = abs >= 1000 ? 1 : abs >= 100 ? 2 : 3;
+      return n.toLocaleString("zh-CN", { maximumFractionDigits: digits });
+    }
+
+    function fmtPts(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v);
+      const sign = n > 0 ? "+" : "";
+      return sign + fmtPx(n);
+    }
+
+    function fmtLots(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v);
+      if (Math.abs(n) >= 10000) return (n / 10000).toFixed(1) + "万";
+      return Math.round(n).toLocaleString("zh-CN");
+    }
+
+    function fmtCny(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v);
+      const abs = Math.abs(n);
+      const sign = n < 0 ? "-" : "";
+      if (abs >= 1e8) return sign + (abs / 1e8).toFixed(2) + "亿";
+      if (abs >= 1e4) return sign + (abs / 1e4).toFixed(2) + "万";
+      return (n < 0 ? "-" : "") + "¥" + Math.round(abs).toLocaleString("zh-CN");
+    }
+
+    function fmtCnyFull(v) {
+      if (v == null || Number.isNaN(Number(v))) return "";
+      return "¥" + Number(v).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+    }
+
+    function fmtRate(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v) * 100;
+      const digits = Math.abs(n - Math.round(n)) < 1e-6 ? 0 : 1;
+      return n.toFixed(digits) + "%";
+    }
+
+    function fmtMult(p) {
+      if (p.multiplier_text) return p.multiplier_text;
+      if (p.multiplier == null) return "—";
+      return String(p.multiplier) + (p.multiplier_unit || "") + "/手";
+    }
+
+    function productNotional(p) {
+      if (p.notional != null) return p.notional;
+      if (p.virtual && p.multiplier != null && p.virtual.price != null) return p.virtual.price * p.multiplier;
+      return null;
+    }
+
+    function productMargin(p) {
+      if (p.margin_min != null) return p.margin_min;
+      const n = productNotional(p);
+      if (n == null || p.margin_rate == null) return null;
+      return n * p.margin_rate;
+    }
+
+    function legNotional(p, leg) {
+      if (!leg || leg.price == null) return null;
+      if (leg.notional != null) return leg.notional;
+      if (p.multiplier != null) return leg.price * p.multiplier;
+      return null;
+    }
+
+    function tipNotional(p) {
+      const v = p.virtual;
+      const n = productNotional(p);
+      if (!v || p.multiplier == null || n == null) return "面值 = 主力最新价 × 合约乘数";
+      return "面值 = 主力 " + v.symbol + " " + fmtPx(v.price) + " × " + p.multiplier + " = " + fmtCnyFull(n);
+    }
+
+    function tipMargin(p) {
+      const asOf = p.margin_as_of || "静态表";
+      return "最低保证金 = 面值 × 交易所普通月份最低投机比例 " + fmtRate(p.margin_rate)
+        + "，截至 " + asOf + "。期货公司通常更高；近交割月比例可能上调。金额 " + fmtCnyFull(productMargin(p)) + "。";
+    }
+
+    function tipMult(p) {
+      const bits = ["交易所合约乘数 " + fmtMult(p)];
+      if (p.quote_unit) bits.push("报价 " + p.quote_unit);
+      if (p.quote_note) bits.push(p.quote_note);
+      return bits.join("。");
+    }
+
+    function fmtDte(v) {
+      if (v == null || Number.isNaN(Number(v))) return "—";
+      const n = Number(v);
+      if (n < 0) return "规则日已过";
+      return n + "天";
+    }
+
+    function basisClass(v) {
+      if (v == null || Number(v) === 0 || Number.isNaN(Number(v))) return "text-slate-300";
+      return Number(v) > 0 ? "text-emerald-400" : "text-red-400";
+    }
+
+    function basisPctClass(v) {
+      if (v == null || Number.isNaN(Number(v))) return "text-slate-500";
+      const n = Number(v);
+      if (n >= 80) return "text-emerald-400";
+      if (n >= 60) return "text-emerald-300";
+      if (n <= 20) return "text-red-400";
+      if (n <= 40) return "text-amber-300";
+      return "text-slate-100";
+    }
+
+    function pricePctClass(v) {
+      if (v == null || Number.isNaN(Number(v))) return "text-slate-500";
+      const n = Number(v);
+      if (n >= 80) return "text-sky-300";
+      if (n <= 20) return "text-slate-400";
+      return "text-slate-100";
+    }
+
+    function tipBasis(p) {
+      const n = p.basis_n || 0;
+      if (p.basis_pct == null) return "样本 " + n + " 日，不足 30 不显示。贴水分位越高 = 远月折价越深。";
+      return "近3年 " + n + " 个交易日中，年化贴水不高于今天的占 " + p.basis_pct + "%。越高 = 远月折价越深。不含行情日当天。";
+    }
+
+    function tipPrice(p) {
+      const n = p.price_n || 0;
+      if (p.price_pct == null) return "样本 " + n + " 日，不足 30 不显示。价格分位越高 = 越接近近3年高位。";
+      return "近3年 " + n + " 个交易日中，拼接后的主力价格不高于今天的占 " + p.price_pct + "%。越高 = 越接近窗口高位。这不是贴水。";
+    }
+
+    function sparkSVG(values) {
+      if (!values || values.length < 2) return "";
+      const w = 320;
+      const h = 44;
+      const nums = values.filter((v) => v != null && !Number.isNaN(v));
+      if (nums.length < 2) return "";
+      let min = Math.min(0, ...nums);
+      let max = Math.max(0, ...nums);
+      if (min === max) { min -= 0.01; max += 0.01; }
+      const xOf = (i) => (values.length <= 1 ? 0 : (i / (values.length - 1)) * w);
+      const yOf = (v) => h - ((v - min) / (max - min)) * (h - 6) - 3;
+      let d = "";
+      let pen = false;
+      values.forEach((v, i) => {
+        if (v == null || Number.isNaN(v)) { pen = false; return; }
+        d += (pen ? "L" : "M") + xOf(i).toFixed(1) + " " + yOf(v).toFixed(1) + " ";
+        pen = true;
+      });
+      const zy = yOf(0);
+      const last = [...values].reverse().find((v) => v != null);
+      const color = last > 0 ? "#34d399" : last < 0 ? "#f87171" : "#94a3b8";
+      return '<svg viewBox="0 0 ' + w + " " + h + '" class="w-full h-12" role="img" aria-label="近3年年化贴水">' +
+        '<line x1="0" x2="' + w + '" y1="' + zy.toFixed(1) + '" y2="' + zy.toFixed(1) + '" stroke="#334155" stroke-dasharray="3 3"/>' +
+        '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+        "</svg>";
+    }
+
+    function missingSortValue(value, type) {
+      if (value == null || value === "") return true;
+      return type === "num" && Number.isNaN(Number(value));
+    }
+
+    function compareSortValues(a, b, type, dir) {
+      const aMissing = missingSortValue(a, type);
+      const bMissing = missingSortValue(b, type);
+      if (aMissing || bMissing) {
+        if (aMissing && bMissing) return 0;
+        return aMissing ? 1 : -1;
+      }
+      const cmp = type === "num"
+        ? Number(a) - Number(b)
+        : String(a).localeCompare(String(b), "zh-CN", { numeric: true, sensitivity: "base" });
+      if (cmp === 0) return 0;
+      return dir === "asc" ? cmp : -cmp;
+    }
+
+    function visibleProducts() {
+      const all = (SNAP && SNAP.products) || [];
+      const list = all.filter((p) => sector === "全部" || p.sector === sector);
+      const meta = SORT_META[sortKey];
+      if (!meta) return list;
+      return list
+        .map((p, i) => ({ p, i }))
+        .sort((a, b) => {
+          const cmp = compareSortValues(meta.pick(a.p), meta.pick(b.p), meta.type, sortDir);
+          return cmp !== 0 ? cmp : a.i - b.i;
+        })
+        .map((row) => row.p);
+    }
+
+    function syncSortHeaders() {
+      document.querySelectorAll(".overview thead th[data-sort]").forEach((th) => {
+        const key = th.getAttribute("data-sort");
+        const meta = SORT_META[key];
+        const active = key === sortKey;
+        const btn = th.querySelector(".sort-btn");
+        th.setAttribute("aria-sort", active ? (sortDir === "asc" ? "ascending" : "descending") : "none");
+        if (btn && meta) {
+          btn.setAttribute("aria-label", active
+            ? meta.label + (sortDir === "asc" ? "，当前升序，点击改为降序" : "，当前降序，点击改为升序")
+            : "按" + meta.label + "排序");
+        }
+      });
+      const reset = $("sortReset");
+      if (reset) reset.classList.toggle("hidden", !sortKey);
+    }
+
+    function renderFilters() {
+      $("filters").innerHTML = SECTORS.map((name) => {
+        const pressed = name === sector ? "true" : "false";
+        return '<button type="button" class="chip text-xs px-3 py-1 rounded-full" data-sector="' + name + '" aria-pressed="' + pressed + '">' + name + "</button>";
+      }).join("");
+      $("filters").querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          sector = btn.getAttribute("data-sector");
+          render();
+        });
+      });
+    }
+
+    function renderOverview(list) {
+      if (!list.length) {
+        $("overviewBody").innerHTML = '<tr><td colspan="12" class="px-3 py-8 text-center text-slate-500">这个板块没有品种。</td></tr>';
+        return;
+      }
+      $("overviewBody").innerHTML = list.map((p) => {
+        const v = p.virtual;
+        const f = p.far;
+        const s = p.spot_proxy;
+        const ann = f ? f.ann : null;
+        const spotCell = s
+          ? '<div>' + s.symbol + '</div><div class="text-slate-300">' + fmtPx(s.price) + "</div>"
+          : "—";
+        return '<tr class="border-b border-slate-800/80 hover:bg-slate-900 cursor-pointer" data-jump="' + p.code + '">' +
+          '<td class="px-3 py-2"><div class="font-medium">' + p.name + '</div><div class="text-[11px] text-slate-500">' + p.sector + " · " + p.exchange_name + "</div></td>" +
+          '<td class="px-3 py-2 num" title="近月代理现货，不是港口或现金现货">' + spotCell + "</td>" +
+          '<td class="px-3 py-2 num">' + (v ? v.symbol : "—") + "</td>" +
+          '<td class="px-3 py-2 num text-right">' + (v ? fmtPx(v.price) : "—") + "</td>" +
+          '<td class="px-3 py-2 num text-right" title="' + tipMult(p) + '">' + fmtMult(p) + "</td>" +
+          '<td class="px-3 py-2 num text-right" title="' + tipNotional(p) + '">' + fmtCny(productNotional(p)) + "</td>" +
+          '<td class="px-3 py-2 num text-right" title="' + tipMargin(p) + '">' + fmtCny(productMargin(p)) + "</td>" +
+          '<td class="px-3 py-2 num text-right text-slate-300 hidden sm:table-cell">' + (v ? fmtDte(v.dte) : "—") + "</td>" +
+          '<td class="px-3 py-2 num">' + (f ? f.symbol : "—") + "</td>" +
+          '<td class="px-3 py-2 num text-right ' + basisClass(ann) + '">' + fmtAnn(ann) + "</td>" +
+          '<td class="px-3 py-2 num text-right font-semibold ' + basisPctClass(p.basis_pct) + '" title="' + tipBasis(p) + '">' + fmtPctile(p.basis_pct) + "</td>" +
+          '<td class="px-3 py-2 num text-right font-semibold ' + pricePctClass(p.price_pct) + '" title="' + tipPrice(p) + '">' + fmtPctile(p.price_pct) + "</td>" +
+          "</tr>";
+      }).join("");
+      $("overviewBody").querySelectorAll("[data-jump]").forEach((tr) => {
+        tr.addEventListener("click", () => {
+          const el = document.getElementById("card-" + tr.getAttribute("data-jump"));
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    function termRows(p) {
+      const terms = p.terms || [];
+      if (!terms.length) {
+        return '<p class="text-sm text-slate-500 px-1">' + (p.error || "暂无活跃合约") + "</p>";
+      }
+      const body = terms.map((t) => {
+        const cls = t.role === "virtual" ? "row-virtual" : t.role === "far" ? "row-far" : (t.is_spot ? "row-spot" : "");
+        const badges = [];
+        if (t.is_spot) badges.push('<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-700 text-white align-middle">现货</span>');
+        if (t.role === "virtual") badges.push('<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white align-middle">主力</span>');
+        if (t.role === "far") badges.push('<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-sky-700 text-white align-middle">次活跃远月</span>');
+        const refRow = isBasisRef(p, t);
+        return '<tr class="border-t border-slate-800 ' + cls + '">' +
+          '<td class="px-3 py-2 num">' + t.symbol + badges.join("") + "</td>" +
+          '<td class="px-3 py-2 num text-right">' + fmtPx(t.price) + "</td>" +
+          '<td class="px-3 py-2 num text-right text-slate-300">' + fmtLots(t.volume) + "</td>" +
+          '<td class="px-3 py-2 num text-right text-slate-300">' + fmtLots(t.oi) + "</td>" +
+          '<td class="px-3 py-2 num text-right text-slate-300">' + fmtLots(t.score) + "</td>" +
+          '<td class="px-3 py-2 num text-right">' + fmtDte(t.dte) + "</td>" +
+          '<td class="px-3 py-2 num text-right ' + basisClass(t.raw) + '">' + (refRow ? "—" : fmtPts(t.raw)) + "</td>" +
+          '<td class="px-3 py-2 num text-right ' + basisClass(t.ann) + '">' + (refRow ? "—" : fmtAnn(t.ann)) + "</td>" +
+          "</tr>";
+      }).join("");
+      return '<div class="overflow-x-auto"><table class="min-w-full text-sm">' +
+        "<thead><tr class=\"text-left text-[11px] text-slate-500\">" +
+        '<th class="px-3 py-1 font-medium">合约</th>' +
+        '<th class="px-3 py-1 font-medium text-right">最新</th>' +
+        '<th class="px-3 py-1 font-medium text-right">成交</th>' +
+        '<th class="px-3 py-1 font-medium text-right">持仓</th>' +
+        '<th class="px-3 py-1 font-medium text-right">得分</th>' +
+        '<th class="px-3 py-1 font-medium text-right">剩余</th>' +
+        '<th class="px-3 py-1 font-medium text-right">近高远低</th>' +
+        '<th class="px-3 py-1 font-medium text-right">年化</th>' +
+        "</tr></thead><tbody>" + body + "</tbody></table></div>" +
+        '<p class="text-[11px] text-slate-500 mt-2 px-1">得分 = 持仓 + 成交。现货是到期最早的未到期合约（近月代理，不是港口现货）。主力是得分最高的一行，价格分位用它。次活跃远月是晚于主力的月份里得分最高的一行。表内近高远低和年化都相对现货代理。</p>';
+    }
+
+    function isBasisRef(p, t) {
+      if (p.spot_proxy && p.spot_proxy.symbol) return t.symbol === p.spot_proxy.symbol || t.is_spot;
+      return t.role === "virtual";
+    }
+
+    function legBox(label, sub, symbol, price, title, notional) {
+      return '<div class="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2" title="' + (title || "") + '">' +
+        '<div class="text-[11px] text-slate-500">' + label + (sub ? ' <span class="text-amber-200/80">' + sub + "</span>" : "") + "</div>" +
+        '<div class="num text-sm mt-0.5">' + (symbol || "—") + "</div>" +
+        '<div class="num text-slate-300">' + (symbol ? fmtPx(price) : "—") + "</div>" +
+        '<div class="num text-[11px] text-slate-500 mt-0.5">面值 ' + (symbol ? fmtCny(notional) : "—") + "</div>" +
+      "</div>";
+    }
+
+    function statBox(label, value, sub, title) {
+      return '<div class="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2" title="' + (title || "") + '">' +
+        '<div class="text-[11px] text-slate-500">' + label + "</div>" +
+        '<div class="num text-base font-medium mt-0.5">' + value + "</div>" +
+        (sub ? '<div class="text-[11px] text-slate-500 mt-0.5">' + sub + "</div>" : "") +
+      "</div>";
+    }
+
+    function economicsRow(p) {
+      const multSub = p.quote_unit ? "报价 " + p.quote_unit : "";
+      return '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">' +
+        statBox("乘数", fmtMult(p), multSub || "交易所交易单位", tipMult(p)) +
+        statBox("面值", fmtCny(productNotional(p)), "主力最新价 × 乘数", tipNotional(p)) +
+        statBox("保证金比例", fmtRate(p.margin_rate), "交易所最低 · 普通月份", tipMargin(p)) +
+        statBox("最低保证金", fmtCny(productMargin(p)), "面值 × 保证金比例", tipMargin(p)) +
+      "</div>" +
+      (p.quote_note ? '<p class="text-[11px] text-amber-200/80 mt-2">' + p.quote_note + "</p>" : "");
+    }
+
+    function cardHeadline(p) {
+      const v = p.virtual;
+      const f = p.far;
+      const s = p.spot_proxy;
+      if (!v) return p.error || "暂无报价";
+      const mainBit = "主力 " + v.symbol + " 按持仓+成交选取，价格分位用它。";
+      const spotBit = s
+        ? "现货代理 " + s.symbol + "（近月合约，不是现金现货）"
+        : "没有未到期的近月合约可作现货代理";
+      if (!s) return spotBit + "。" + mainBit + " 年化贴水不算。";
+      if (!f) return spotBit + "。没有晚于主力的活跃远月，年化贴水不算。" + mainBit;
+      if (f.gap != null && f.gap <= 0) {
+        return spotBit + "。次活跃远月 " + f.symbol + " 不晚于现货代理，年化贴水不算。" + mainBit;
+      }
+      const gapTxt = f.gap == null ? "—" : f.gap;
+      const short = f.ann == null && f.gap != null && f.gap < 7 ? " 间隔不足 7 天，不年化。" : "";
+      return spotBit + " 对次活跃远月 " + f.symbol + "，价差 " + fmtPts(f.raw) + "，间隔 " + gapTxt + " 天。" + short + mainBit;
+    }
+
+    function cardHTML(p) {
+      const v = p.virtual;
+      const f = p.far;
+      const s = p.spot_proxy;
+      const ann = f ? f.ann : null;
+      return '<article id="card-' + p.code + '" class="scroll-mt-24 rounded-xl border border-slate-800 bg-slate-900 p-4 md:p-5">' +
+        '<div class="flex flex-wrap items-start justify-between gap-3">' +
+          '<div>' +
+            '<h3 class="text-lg font-semibold">' + p.name + ' <span class="num text-slate-400 text-base">' + p.code + "</span></h3>" +
+            '<p class="text-xs text-slate-500 mt-0.5">' + p.exchange_name + " · " + p.sector + (p.as_of ? " · 行情日 " + p.as_of : "") + "</p>" +
+          "</div>" +
+          '<div class="text-right">' +
+            '<div class="text-[11px] text-slate-500">年化贴水</div>' +
+            '<div class="num text-2xl font-semibold ' + basisClass(ann) + '">' + fmtAnn(ann) + "</div>" +
+          "</div>" +
+        "</div>" +
+        '<p class="text-sm text-slate-300 mt-3">' + cardHeadline(p) + "</p>" +
+        '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">' +
+          legBox("现货", "近月代理", s && s.symbol, s && s.price, "离交割最近的未到期合约，不是港口或现金现货", legNotional(p, s)) +
+          legBox("主力", "", v && v.symbol, v && v.price, "持仓+成交最高的连续腿，价格分位用它", legNotional(p, v)) +
+          legBox("次活跃远月", "", f && f.symbol, f && f.price, "到期晚于主力、得分最高的合约", legNotional(p, f)) +
+        "</div>" +
+        economicsRow(p) +
+        '<div class="grid grid-cols-2 gap-3 mt-3 max-w-md">' +
+          '<div class="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2" title="' + tipBasis(p) + '">' +
+            '<div class="text-[11px] text-slate-500">贴水分位</div>' +
+            '<div class="num text-xl font-semibold ' + basisPctClass(p.basis_pct) + '">' + fmtPctile(p.basis_pct) + "</div>" +
+          "</div>" +
+          '<div class="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2" title="' + tipPrice(p) + '">' +
+            '<div class="text-[11px] text-slate-500">价格分位</div>' +
+            '<div class="num text-xl font-semibold ' + pricePctClass(p.price_pct) + '">' + fmtPctile(p.price_pct) + "</div>" +
+          "</div>" +
+        "</div>" +
+        '<div class="mt-3">' +
+          '<div class="text-[11px] text-slate-500 mb-1">近 3 年年化贴水（零轴为平水）</div>' +
+          sparkSVG(p.spark) +
+        "</div>" +
+        '<div class="mt-3">' + termRows(p) + "</div>" +
+      "</article>";
+    }
+
+    function renderCards(list) {
+      if (!SNAP) {
+        $("cards").innerHTML = "";
+        return;
+      }
+      if (!sortKey && sector === "全部") {
+        const chunks = [];
+        SECTORS.filter((s) => s !== "全部").forEach((name) => {
+          const group = list.filter((p) => p.sector === name);
+          if (!group.length) return;
+          chunks.push('<section class="space-y-4"><h2 class="text-sm font-semibold text-amber-200/90">' + name + "</h2>" + group.map(cardHTML).join("") + "</section>");
+        });
+        $("cards").innerHTML = chunks.join("");
+        return;
+      }
+      $("cards").innerHTML = list.map(cardHTML).join("");
+    }
+
+    function renderSummary(list) {
+      const scope = list;
+      const known = scope.filter((p) => p.far && p.far.ann != null);
+      const back = known.filter((p) => p.far.ann > 0).length;
+      const cont = known.filter((p) => p.far.ann < 0).length;
+      $("summaryLine").textContent = scope.length + " 个品种在当前筛选里 · " + back + " 个远月贴水 · " + cont + " 个远月升水 · 分位格子只写百分数";
+    }
+
+    function render() {
+      renderFilters();
+      syncSortHeaders();
+      const list = visibleProducts();
+      renderSummary(list);
+      renderOverview(list);
+      renderCards(list);
+    }
+
+    async function load() {
+      $("status").textContent = "加载中";
+      try {
+        const res = await fetch("data/latest.json?t=" + Date.now());
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        SNAP = await res.json();
+        const gen = (SNAP.generated_at || "").replace("T", " ").replace("+08:00", "");
+        $("ts").textContent = (SNAP.as_of || "—") + (gen ? " · 生成 " + gen : "");
+        $("status").textContent = "已加载";
+        $("status").className = "px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 text-xs";
+        const note = [];
+        if (SNAP.as_of) note.push("行情日 " + SNAP.as_of + "。周末和节假日沿用最近交易日。");
+        note.push("年化贴水为正表示次活跃远月比现货代理更便宜。现货是离交割最近的未到期合约，不是港口或现金现货。");
+        if (SNAP.methodology && SNAP.methodology.margin_as_of) {
+          note.push("最低保证金用交易所普通月份比例，截至 " + SNAP.methodology.margin_as_of + "。期货公司通常更高。");
+        }
+        $("calendarNote").textContent = note.join(" ");
+        render();
+      } catch (err) {
+        $("status").textContent = "加载失败";
+        $("status").className = "px-2 py-0.5 rounded bg-red-900 text-red-200 text-xs";
+        $("overviewBody").innerHTML = '<tr><td colspan="12" class="px-3 py-8 text-center text-red-300">读不到 data/latest.json（' + err.message + "）。请先运行 scripts/fetch_basis.py。</td></tr>";
+        $("cards").innerHTML = "";
+        $("summaryLine").textContent = "";
+      }
+    }
+
+    document.querySelectorAll(".overview thead th[data-sort] .sort-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!SNAP) return;
+        const key = btn.closest("th").getAttribute("data-sort");
+        if (!SORT_META[key]) return;
+        if (sortKey === key) sortDir = sortDir === "asc" ? "desc" : "asc";
+        else {
+          sortKey = key;
+          sortDir = SORT_META[key].defaultDir;
+        }
+        render();
+      });
+    });
+    $("sortReset").addEventListener("click", () => {
+      sortKey = null;
+      render();
+    });
+    load();
+  </script>
+</body>
+</html>

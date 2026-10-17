@@ -4,6 +4,8 @@
 
 **在线页面：** https://heber.github.io/cffex-basis/
 
+商品期货贴水（近月代理、主力连续）在同站子目录：https://heber.github.io/cffex-basis/commodity/
+
 静态站托管在 GitHub Pages。行情不由 Pages 上的常驻服务拉取，而是由 GitHub Action 运行 `scripts/fetch_basis.py`，把结果写入 `data/latest.json`。
 
 ## 为什么要矫正分红？
@@ -111,7 +113,9 @@ cffex-basis/
 ├── data/history/series.json           # 日频 corr_ann_365 与指数收盘库存，Action 追加
 ├── scripts/fetch_basis.py             # 拉新浪行情并计算分红矫正贴水
 ├── scripts/basis_history.py           # 历史库存、近3年贴水分位与指数点位分位
-├── .github/workflows/update-basis.yml # 工作日 16:00 提交快照和库存
+├── .github/workflows/update-basis.yml # 工作日 16:00 提交股指快照和库存
+├── .github/workflows/update-commodity-basis.yml # 同一时刻提交商品快照，与上面串行
+├── commodity/                         # 商品贴水页，见 commodity/README.md
 ├── .nojekyll
 └── README.md
 ```
