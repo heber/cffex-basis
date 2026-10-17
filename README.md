@@ -2,7 +2,7 @@
 
 跟踪中金所股指期货 **IH（上证50）、IF（沪深300）、IC（中证500）、IM（中证1000）** 四个活跃合约（当月、次月、当季、下季）的贴水/升水，并对期内分红做矫正后再年化。
 
-**在线页面：** https://zaviichen.github.io/cffex-basis/
+**在线页面：** https://heber.github.io/cffex-basis/
 
 静态站托管在 GitHub Pages。行情不由 Pages 上的常驻服务拉取，而是由 GitHub Action 运行 `scripts/fetch_basis.py`，把结果写入 `data/latest.json`。
 
@@ -94,7 +94,7 @@ python3 scripts/fetch_basis.py --rebuild-history
 - 脚本每次写入新的时间戳；`data/latest.json` 或 `data/history/` 有变化才提交
 - 每次运行把行情日收盘追加进 `data/history/series.json`（已有日期覆盖）
 
-页面页头有 **手动刷新 / 在 Actions 里运行**，链到 [Update CFFEX basis](https://github.com/zaviichen/cffex-basis/actions/workflows/update-basis.yml)。静态站放不了能安全代访客触发 Actions 的密钥，所以按钮只打开工作流页面。GitHub 需登录，且对该仓库有写权限，再点 **Run workflow**，分支选 `main`。旁边的「数据更新于」来自 `data/latest.json` 的 `timestamp`（换算成北京时间）；「重新加载」只重读已提交快照，不拉新浪行情。
+页面页头有 **手动刷新 / 在 Actions 里运行**，链到 [Update CFFEX basis](https://github.com/heber/cffex-basis/actions/workflows/update-basis.yml)。静态站放不了能安全代访客触发 Actions 的密钥，所以按钮只打开工作流页面。GitHub 需登录，且对该仓库有写权限，再点 **Run workflow**，分支选 `main`。旁边的「数据更新于」来自 `data/latest.json` 的 `timestamp`（换算成北京时间）；「重新加载」只重读已提交快照，不拉新浪行情。
 
 本地手动刷新快照（仅标准库）：
 
@@ -118,7 +118,7 @@ cffex-basis/
 
 ## GitHub Pages
 
-仓库公开，Pages 从 `main` 分支根目录 `/` 发布。站点地址为 https://zaviichen.github.io/cffex-basis/ 。
+仓库公开，Pages 从 `main` 分支根目录 `/` 发布。站点地址为 https://heber.github.io/cffex-basis/ 。
 
 若 Pages 尚未打开：仓库 **Settings → Pages → Build and deployment → Deploy from a branch**，Branch 选 `main`、目录选 `/ (root)`，保存。
 
