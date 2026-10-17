@@ -27,6 +27,11 @@ Daily runs append the session close into data/history/series.json.
 `--rebuild-history` refetches Sina daily bars (futures + index) and reseeds
 the store from the first available contract (about 2018-10; IM from 2022-07).
 
+An empty far-quarter quote (Sina `var hq_str_CFF_RE_IH2706="";` before that
+contract is listed) is kept on the 下季 leg with `quote_missing` and does not
+fail the run. History is appended only for contracts that actually quoted.
+Missing spot or 当月/次月/当季 still exits non-zero and does not write.
+
 Stdlib only. Exits non-zero on failure and does not overwrite a good snapshot.
 """
 
@@ -91,6 +96,9 @@ _SEASON_SUM = sum(_RAW_SEASONALITY.values())
 SEASONALITY = {m: w / _SEASON_SUM for m, w in _RAW_SEASONALITY.items()}
 
 QUARTER_MONTHS = {3, 6, 9, 12}
+# Spot plus these three legs are required. 下季 may be unlisted on Sina.
+REQUIRED_LABELS = ("当月", "次月", "当季")
+OPTIONAL_LABEL = "下季"
 
 SINA_HEADERS = {
     "Referer": "https://finance.sina.com.cn",
@@ -209,6 +217,32 @@ def fmt_market_value(yuan: Optional[float]) -> str:
     return f"{yuan:.0f}元"
 
 
+def parse_sina_quotes(raw: str) -> Dict[str, List[str]]:
+    """Split an hq.sinajs.cn body into symbol -> fields.
+
+    A symbol Sina has not listed yet still comes back as a line, with an empty
+    quoted payload: `var hq_str_CFF_RE_IH2706="";`. That is [] here, not a
+    transport failure. A body with no `="` at all is rejected by fetch_sina.
+    """
+    out: Dict[str, List[str]] = {}
+    for line in raw.strip().split("\n"):
+        line = line.strip()
+        if not line or '="' not in line:
+            continue
+        left, right = line.split("=", 1)
+        key = left.replace("var hq_str_", "").strip()
+        payload = right.strip()
+        if payload.startswith('"') and payload.endswith('";'):
+            payload = payload[1:-2]
+        elif payload.startswith('"') and payload.endswith('"'):
+            payload = payload[1:-1]
+        if not payload:
+            out[key] = []
+            continue
+        out[key] = payload.split(",")
+    return out
+
+
 def fetch_sina(symbols: List[str]) -> Dict[str, List[str]]:
     if not symbols:
         return {}
@@ -229,23 +263,7 @@ def fetch_sina(symbols: List[str]) -> Dict[str, List[str]]:
     else:
         raise RuntimeError(f"Sina fetch failed: {last_err}")
 
-    out: Dict[str, List[str]] = {}
-    for line in raw.strip().split("\n"):
-        line = line.strip()
-        if not line or '="' not in line:
-            continue
-        left, right = line.split("=", 1)
-        key = left.replace("var hq_str_", "").strip()
-        payload = right.strip()
-        if payload.startswith('"') and payload.endswith('";'):
-            payload = payload[1:-2]
-        elif payload.startswith('"') and payload.endswith('"'):
-            payload = payload[1:-1]
-        if not payload:
-            out[key] = []
-            continue
-        out[key] = payload.split(",")
-    return out
+    return parse_sina_quotes(raw)
 
 
 def parse_spot(fields: List[str]) -> Optional[float]:
@@ -334,7 +352,11 @@ def calc_basis_row(
     }
 
 
-def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
+def build_basis_payload(
+    today: Optional[date] = None,
+    *,
+    quotes: Optional[Dict[str, List[str]]] = None,
+) -> Dict[str, Any]:
     today = today or date.today()
     all_contracts: Dict[str, List[Dict[str, Any]]] = {}
     symbols: List[str] = []
@@ -345,18 +367,21 @@ def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
         for contract in contracts:
             symbols.append(f"CFF_RE_{contract['code']}")
 
-    quotes = fetch_sina(symbols)
+    if quotes is None:
+        quotes = fetch_sina(symbols)
     products_out: List[Dict[str, Any]] = []
-    missing: List[str] = []
+    # (symbol, fatal). Fatal gaps abort before any write; optional gaps are 下季 only.
+    gaps: List[Tuple[str, bool]] = []
 
     for product, cfg in PRODUCTS.items():
         spot = parse_spot(quotes.get(cfg["spot_code"], []))
         annual_yield = cfg["default_yield"]
         annual_div_pts = (spot * annual_yield) if spot else None
         if spot is None:
-            missing.append(cfg["spot_code"])
+            gaps.append((cfg["spot_code"], True))
 
         contracts_out: List[Dict[str, Any]] = []
+        seen_labels = {c["label"] for c in all_contracts[product]}
         for contract in all_contracts[product]:
             fut = parse_futures(quotes.get(f"CFF_RE_{contract['code']}", []))
             expiry = date.fromisoformat(contract["expiry"])
@@ -372,10 +397,19 @@ def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
                 "volume": fut.get("volume"),
             }
             if spot is None or fut.get("last") is None:
-                row["error"] = "报价缺失"
+                # Keep the leg in the snapshot so the page can show which code
+                # had no quote. Basis fields stay absent; last is null.
+                row["error"] = "新浪暂无报价"
+                row["quote_missing"] = True
                 row["last"] = fut.get("last")
                 row["spot"] = spot
-                missing.append(contract["code"])
+                # 下季 alone is optional, and only when this product's spot quoted.
+                optional = (
+                    contract["label"] == OPTIONAL_LABEL
+                    and spot is not None
+                    and fut.get("last") is None
+                )
+                gaps.append((contract["code"], not optional))
                 contracts_out.append(row)
                 continue
 
@@ -392,6 +426,12 @@ def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
             )
             contracts_out.append(row)
 
+        # active_contracts() normally always emits 当月/次月/当季. If a required
+        # label was never selected, there is nothing useful to publish.
+        for label in REQUIRED_LABELS:
+            if label not in seen_labels:
+                gaps.append((f"{product}:{label}", True))
+
         products_out.append(
             {
                 "code": product,
@@ -406,8 +446,15 @@ def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
             }
         )
 
-    if missing:
-        raise RuntimeError("missing quotes: " + ", ".join(missing))
+    # Empty Sina payloads (`var hq_str_CFF_RE_IH2706="";`) show up for 下季
+    # right after expiry, before that contract is listed. Spot and 当月/次月/当季
+    # are required; if any of those are missing, or a required label was never
+    # selected, abort so main() does not overwrite the snapshot. A lone missing
+    # 下季 is recorded and the run continues with the other three legs.
+    fatal = [code for code, is_fatal in gaps if is_fatal]
+    optional_missing = [code for code, is_fatal in gaps if not is_fatal]
+    if fatal:
+        raise RuntimeError("missing quotes: " + ", ".join(code for code, _fatal in gaps))
 
     # JSON object keys must be strings.
     seasonality = {str(m): round(w, 8) for m, w in SEASONALITY.items()}
@@ -444,6 +491,7 @@ def build_basis_payload(today: Optional[date] = None) -> Dict[str, Any]:
             "contracts_per_product": 4,
             "labels": ["当月", "次月", "当季", "下季"],
             "update": "GitHub Actions cron 0 8 * * 1-5 UTC（北京时间周一至周五 16:00），并追加 data/history/series.json",
+            **({"missing_quotes": optional_missing} if optional_missing else {}),
         },
     }
 
@@ -480,6 +528,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 1
 
     write_snapshot(payload)
+    skipped = payload.get("meta", {}).get("missing_quotes") or []
+    if skipped:
+        print("optional quotes missing: " + ", ".join(skipped), file=sys.stderr)
     print(f"wrote {OUT_PATH} at {payload['timestamp']}")
     for product in payload["products"]:
         front = product["contracts"][0]
