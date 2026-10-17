@@ -1,0 +1,49 @@
+name: Update commodity basis
+
+on:
+  schedule:
+    # Weekdays at 16:00 Asia/Shanghai (08:00 UTC), after the day-session close.
+    # Markets are closed on weekends, so this does not run Sat/Sun.
+    - cron: "0 8 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Same group as .github/workflows/update-basis.yml. Concurrency groups are
+# repository-wide, so the two 16:00 jobs queue instead of pushing together.
+# cancel-in-progress stays false so a queued run still finishes.
+concurrency:
+  group: update-basis
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch basis snapshot
+        run: python commodity/scripts/fetch_basis.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add commodity/data/latest.json commodity/data/history
+          if git diff --cached --quiet; then
+            echo "basis snapshot unchanged"
+          else
+            git commit -m "data: update commodity basis snapshot and history"
+            git pull --rebase origin main
+            git push
+          fi
