@@ -275,5 +275,250 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual(again["series"]["IH"]["下季"], [])
 
 
+def _sina_line(symbol: str, payload: str) -> str:
+    return f'var hq_str_{symbol}="{payload}";'
+
+
+def _spot_payload(px: str) -> str:
+    return ",".join(["index", "1", "1", px, "1", "1"])
+
+
+def _fut_payload(last: str, oi: str, quote_date: str) -> str:
+    fields = [""] * 38
+    fields[0] = fields[1] = fields[2] = fields[3] = last
+    fields[4] = "12"
+    fields[6] = oi
+    fields[36] = quote_date
+    fields[37] = "15:00:00"
+    return ",".join(fields)
+
+
+def _far_codes(day: date) -> set:
+    codes = set()
+    for product in fb.PRODUCTS:
+        for contract in fb.active_contracts(product, day):
+            if contract["label"] == "下季":
+                codes.add(contract["code"])
+    return codes
+
+
+def _quote_book(day: date, blank: set) -> dict:
+    """Build parsed Sina quotes. `blank` holds spot codes or contract codes.
+
+    Blank futures are the empty payload Sina returns for an unlisted contract
+    (`var hq_str_CFF_RE_IH2706="";`), not a missing line.
+    """
+    lines = []
+    bases = {"IH": 3000, "IF": 4000, "IC": 5000, "IM": 6000}
+    for product, cfg in fb.PRODUCTS.items():
+        spot_sym = cfg["spot_code"]
+        spot_body = "" if spot_sym in blank else _spot_payload(str(bases[product]))
+        lines.append(_sina_line(spot_sym, spot_body))
+        for i, contract in enumerate(fb.active_contracts(product, day)):
+            sym = f"CFF_RE_{contract['code']}"
+            if sym in blank or contract["code"] in blank:
+                body = ""
+            else:
+                body = _fut_payload(
+                    str(bases[product] - (i + 1)),
+                    str(100 * (i + 1)),
+                    day.isoformat(),
+                )
+            lines.append(_sina_line(sym, body))
+    return fb.parse_sina_quotes("\n".join(lines))
+
+
+class MissingQuoteTests(unittest.TestCase):
+    """Sina empty-string quotes after the 2026-10-16 expiry.
+
+    On 2026-10-17, 下季 rolls to *2706 while hq.sinajs.cn still answers
+    `var hq_str_CFF_RE_IH2706="";`. Nearer contracts, including *2703, quote.
+    """
+
+    DAY = date(2026, 10, 17)
+
+    def test_empty_sina_payload_parses_as_no_fields(self) -> None:
+        raw = "\n".join(
+            [
+                'var hq_str_CFF_RE_IH2706="";',
+                _sina_line("CFF_RE_IH2703", _fut_payload("2700", "9", "2026-10-16")),
+            ]
+        )
+        parsed = fb.parse_sina_quotes(raw)
+        self.assertEqual(parsed["CFF_RE_IH2706"], [])
+        self.assertIsNone(fb.parse_futures(parsed["CFF_RE_IH2706"])["last"])
+        self.assertEqual(fb.parse_futures(parsed["CFF_RE_IH2703"])["last"], 2700.0)
+
+    def test_empty_far_quarter_keeps_near_legs_and_history(self) -> None:
+        blank = _far_codes(self.DAY)
+        self.assertEqual(blank, {"IH2706", "IF2706", "IC2706", "IM2706"})
+        quotes = _quote_book(self.DAY, blank)
+        for code in blank:
+            self.assertEqual(quotes[f"CFF_RE_{code}"], [])
+        self.assertEqual(fb.parse_futures(quotes["CFF_RE_IH2703"])["last"], 2997.0)
+
+        payload = fb.build_basis_payload(self.DAY, quotes=quotes)
+        self.assertEqual(
+            payload["meta"]["missing_quotes"],
+            ["IH2706", "IF2706", "IC2706", "IM2706"],
+        )
+        self.assertNotIn("error", payload)
+
+        series = {code: {label: [] for label in bh.LABELS} for code in fb.PRODUCTS}
+        doc = bh.new_document(series)
+        bh.upsert_payload(doc, payload)
+        bh.attach_percentiles(payload, doc)
+
+        for product in payload["products"]:
+            codes = [c["code"] for c in product["contracts"]]
+            self.assertEqual(codes[1][-4:], "2612")
+            self.assertEqual(codes[2][-4:], "2703")
+            self.assertEqual(codes[3][-4:], "2706")
+            near = product["contracts"][:3]
+            self.assertEqual([c["label"] for c in near], ["当月", "次月", "当季"])
+            for contract in near:
+                self.assertNotIn("quote_missing", contract)
+                self.assertNotIn("error", contract)
+                self.assertIsNotNone(contract["last"])
+                self.assertIsNotNone(contract["corr_ann_365"])
+            far = product["contracts"][3]
+            self.assertEqual(far["label"], "下季")
+            self.assertTrue(far["quote_missing"])
+            self.assertEqual(far["error"], "新浪暂无报价")
+            self.assertIsNone(far["last"])
+            self.assertNotIn("corr_ann_365", far)
+            self.assertIsNone(far["hist_pct"])
+            self.assertNotIn("is_main", far)
+            stored = doc["series"][product["code"]]
+            self.assertEqual(stored["下季"], [])
+            for label in ("当月", "次月", "当季"):
+                self.assertEqual(len(stored[label]), 1)
+                self.assertEqual(stored[label][0][0], 20261017)
+
+        front = payload["products"][0]["contracts"][0]
+        self.assertEqual(front["code"], "IH2611")
+        self.assertEqual(front["last"], 2999.0)
+        self.assertAlmostEqual(front["raw_basis"], 1.0, places=4)
+
+    def test_one_product_far_quarter_does_not_drop_the_others(self) -> None:
+        payload = fb.build_basis_payload(self.DAY, quotes=_quote_book(self.DAY, {"IH2706"}))
+        self.assertEqual(payload["meta"]["missing_quotes"], ["IH2706"])
+        ih = payload["products"][0]
+        self.assertTrue(ih["contracts"][3]["quote_missing"])
+        for product in payload["products"][1:]:
+            for contract in product["contracts"]:
+                self.assertNotIn("quote_missing", contract)
+                self.assertIsNotNone(contract["corr_ann_365"])
+
+    def test_complete_book_omits_missing_quotes_key(self) -> None:
+        payload = fb.build_basis_payload(self.DAY, quotes=_quote_book(self.DAY, set()))
+        self.assertNotIn("missing_quotes", payload["meta"])
+        for product in payload["products"]:
+            self.assertEqual(len(product["contracts"]), 4)
+            for contract in product["contracts"]:
+                self.assertNotIn("error", contract)
+                self.assertIsNotNone(contract["corr_ann_365"])
+
+    def test_absent_required_label_aborts(self) -> None:
+        orig = fb.active_contracts
+
+        def without_current_quarter(prefix: str, today=None):
+            return [c for c in orig(prefix, today) if c["label"] != "当季"]
+
+        fb.active_contracts = without_current_quarter
+        try:
+            with self.assertRaises(RuntimeError) as ctx:
+                fb.build_basis_payload(self.DAY, quotes=_quote_book(self.DAY, set()))
+        finally:
+            fb.active_contracts = orig
+        self.assertEqual(
+            str(ctx.exception),
+            "missing quotes: IH:当季, IF:当季, IC:当季, IM:当季",
+        )
+
+    def test_required_legs_still_abort(self) -> None:
+        cases = {
+            "spot": ({"sh000016"}, "sh000016, IH2611, IH2612, IH2703, IH2706"),
+            "当月": ({"IH2611"}, "IH2611"),
+            "次月": ({"IH2612"}, "IH2612"),
+            "当季 even if 下季 quotes": ({"IH2703"}, "IH2703"),
+            "当季 and 下季": ({"IH2703", "IH2706"}, "IH2703, IH2706"),
+            "only 当季 left": ({"IH2611", "IH2612", "IH2706"}, "IH2611, IH2612, IH2706"),
+        }
+        for name, (blank, message) in cases.items():
+            with self.subTest(name=name):
+                with self.assertRaises(RuntimeError) as ctx:
+                    fb.build_basis_payload(self.DAY, quotes=_quote_book(self.DAY, blank))
+                self.assertEqual(str(ctx.exception), "missing quotes: " + message)
+
+    def test_main_does_not_write_when_required_quotes_are_missing(self) -> None:
+        latest = (fb.ROOT / "data" / "latest.json").read_bytes()
+        series = (bh.SERIES_PATH).read_bytes()
+        writes: list = []
+        applies: list = []
+        orig_fetch, orig_write, orig_apply = fb.fetch_sina, fb.write_snapshot, bh.apply
+        fb.fetch_sina = lambda symbols: {sym: [] for sym in symbols}
+        fb.write_snapshot = lambda payload: writes.append(payload)
+        bh.apply = lambda *args, **kwargs: applies.append(True)
+        try:
+            rc = fb.main([])
+        finally:
+            fb.fetch_sina, fb.write_snapshot, bh.apply = orig_fetch, orig_write, orig_apply
+        self.assertEqual(rc, 1)
+        self.assertEqual(writes, [])
+        self.assertEqual(applies, [])
+        self.assertEqual((fb.ROOT / "data" / "latest.json").read_bytes(), latest)
+        self.assertEqual(bh.SERIES_PATH.read_bytes(), series)
+
+    def test_main_publishes_when_only_far_quarter_is_empty(self) -> None:
+        day = date.today()
+        book = _quote_book(day, _far_codes(day))
+        latest = (fb.ROOT / "data" / "latest.json").read_bytes()
+        series = bh.SERIES_PATH.read_bytes()
+        writes: list = []
+        orig_fetch, orig_write, orig_apply = fb.fetch_sina, fb.write_snapshot, bh.apply
+
+        def fake_apply(payload, rebuild=False, path=None):
+            doc = bh.new_document(
+                {code: {label: [] for label in bh.LABELS} for code in fb.PRODUCTS}
+            )
+            bh.upsert_payload(doc, payload)
+            bh.attach_percentiles(payload, doc)
+            writes.append(doc)
+
+        fb.fetch_sina = lambda symbols: book
+        fb.write_snapshot = lambda payload: writes.append(payload)
+        bh.apply = fake_apply
+        try:
+            rc = fb.main([])
+        finally:
+            fb.fetch_sina, fb.write_snapshot, bh.apply = orig_fetch, orig_write, orig_apply
+        self.assertEqual(rc, 0)
+        self.assertEqual(len(writes), 2)
+        doc, payload = writes
+        expected = []
+        for product in fb.PRODUCTS:
+            for contract in fb.active_contracts(product, day):
+                if contract["label"] == "下季":
+                    expected.append(contract["code"])
+        self.assertEqual(payload["meta"]["missing_quotes"], expected)
+        for product in payload["products"]:
+            code = product["code"]
+            for contract in product["contracts"]:
+                rows = doc["series"][code][contract["label"]]
+                quoted_days = None
+                if contract.get("quote_date") and contract.get("expiry"):
+                    quoted_days = (
+                        date.fromisoformat(contract["expiry"])
+                        - date.fromisoformat(contract["quote_date"])
+                    ).days
+                if contract.get("quote_missing") or not quoted_days or quoted_days <= 0:
+                    self.assertEqual(rows, [])
+                else:
+                    self.assertEqual(len(rows), 1)
+        self.assertEqual((fb.ROOT / "data" / "latest.json").read_bytes(), latest)
+        self.assertEqual(bh.SERIES_PATH.read_bytes(), series)
+
+
 if __name__ == "__main__":
     unittest.main()
