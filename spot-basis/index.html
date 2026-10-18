@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中国商品期现基差</title>
+  <meta name="description" content="生意社现金现货对 SHFE、DCE、CZCE、INE、广期所期货的期现基差。近月、主力、远月分别计算基差和年化，单位不一致的品种单独标明。" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans SC"', "PingFang SC", "Microsoft YaHei", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+    .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    table { border-collapse: collapse; }
+    th, td { white-space: nowrap; }
+    .table-wrap { overflow-x: auto; }
+    .overview thead th { position: sticky; top: 0; background: #0f172a; z-index: 10; }
+    .overview th:first-child, .overview td:first-child {
+      position: sticky; left: 0; background: #020617; z-index: 5;
+    }
+    .overview thead th:first-child { z-index: 15; background: #0f172a; }
+    .chip { border: 1px solid #334155; background: #0f172a; color: #cbd5e1; }
+    .chip[aria-pressed="true"] { background: #b45309; border-color: #d97706; color: white; }
+    .tag { font-size: 10px; line-height: 1.4; border-radius: 999px; padding: 0 0.4rem; }
+    .tag-warn { color: #fcd34d; border: 1px solid #92400e; }
+    .tag-conv { color: #7dd3fc; border: 1px solid #075985; }
+    .tag-miss { color: #94a3b8; border: 1px solid #334155; }
+    .row-main td { background: rgba(6, 78, 59, 0.28); }
+    .row-far td { background: rgba(12, 74, 110, 0.22); }
+    .row-near td { background: rgba(120, 53, 15, 0.28); }
+    @media (min-width: 1600px) {
+      .table-wrap { overflow: visible; }
+      .overview thead th,
+      .overview thead th:first-child { top: 5.5rem; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-30 backdrop-blur">
+    <div class="max-w-[96rem] mx-auto px-4 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">中国商品期现基差</h1>
+          <p class="text-slate-400 text-sm mt-1">现金现货 − 期货 · 近月 / 主力 / 远月 · <a class="underline hover:text-slate-200" href="../">股指贴水</a> · <a class="underline hover:text-slate-200" href="../commodity/">商品期限贴水</a> · <a class="underline hover:text-slate-200" href="../ah-premium/">AH溢价</a></p>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:w-auto sm:max-w-xl sm:justify-end">
+          <span id="ts" class="text-slate-400 num">—</span>
+          <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">加载中</span>
+          <a id="manualRefresh"
+             href="https://github.com/heber/cffex-basis/actions/workflows/update-spot-basis.yml"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">手动刷新</a>
+          <span class="max-w-full text-[11px] leading-snug text-slate-500">需要写入权限，打开后点 Run workflow</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[96rem] mx-auto px-4 py-6 space-y-6">
+    <section class="rounded-xl border border-amber-700/40 bg-amber-950/30 p-4 md:p-5">
+      <h2 class="text-amber-300 font-semibold mb-2">这是现金现货，不是近月合约</h2>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        <strong class="text-slate-100">基差 = 现货 − 期货</strong>。正数是贴水（现货更高，绿），负数是升水（期货更高，红）。
+        年化 = 基差 / 现货 × 365 / 期货剩余自然日。剩余不足 7 日只留基差，不年化。不扣利率。
+      </p>
+      <p class="text-slate-300 text-sm leading-relaxed mt-2">
+        现货来自生意社现期表，期货来自新浪最新价，本页自己重算基差。
+        <a class="underline text-amber-200" href="../commodity/">商品期限贴水</a>里的「现货」仍是最近一张未到期合约，不是这张表上的现金价。
+      </p>
+      <div class="mt-3 flex flex-wrap gap-3 text-xs">
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span>贴水（现货 &gt; 期货）绿</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600"></span>升水（现货 &lt; 期货）红</span>
+        <span class="tag tag-warn">规格不一</span>
+        <span class="tag tag-conv">已折算</span>
+        <span class="tag tag-miss">暂无现货</span>
+      </div>
+    </section>
+
+    <p id="dateBanner" class="hidden text-sm text-amber-200/90"></p>
+    <section class="flex flex-wrap items-center gap-2" id="filters"></section>
+    <p id="summaryLine" class="text-sm text-slate-300"></p>
+
+    <section class="space-y-2">
+      <h2 class="text-sm font-semibold text-slate-300">总览</h2>
+      <p class="text-xs text-slate-500">近月是最早到期的未到期合约，主力是持仓加成交最高的一张，远月是比主力更远、得分最高的一张。三列都可以和现货不同月。</p>
+      <div class="table-wrap rounded-xl border border-slate-800">
+        <table class="overview min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+              <th class="px-3 py-2 font-medium" scope="col">品种</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">现货</th>
+              <th class="px-3 py-2 font-medium" scope="col">近月</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">基差</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">年化</th>
+              <th class="px-3 py-2 font-medium" scope="col">主力</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">基差</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">年化</th>
+              <th class="px-3 py-2 font-medium" scope="col">远月</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">基差</th>
+              <th class="px-3 py-2 font-medium text-right" scope="col">年化</th>
+            </tr>
+          </thead>
+          <tbody id="overviewBody">
+            <tr><td colspan="11" class="px-3 py-8 text-center text-slate-500">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="cards" class="space-y-8"></div>
+
+    <footer class="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400 space-y-3">
+      <h2 class="text-slate-200 font-semibold">口径、来源和用的时候要留神的地方</h2>
+      <ul id="methodList" class="list-disc list-inside space-y-1.5 leading-relaxed">
+        <li><strong class="text-slate-300">现货</strong>取生意社当日现期表的现金报价。表上没有的品种写成暂无，不参与基差，这次抓取也不因此失败。</li>
+        <li><strong class="text-slate-300">期货</strong>取新浪最新价。近月、主力、远月的挑法与商品期限贴水页相同。曲线上其余行是当天较活跃的月份。</li>
+        <li><strong class="text-slate-300">基差</strong> = 用于比较的现货价 − 该合约期货价。玻璃先把元/平方米按 5mm、12.5 kg/㎡（×80）折成元/吨。铁矿石是湿吨减干吨，燃料油和焦炭规格不同，这三列都标成规格不一。</li>
+        <li><strong class="text-slate-300">年化</strong> = 基差 / 现货 × 365 / 剩余自然日。到期日沿用商品页的工作日近似，未扣节假日。剩余少于 7 日不年化。</li>
+        <li><strong class="text-slate-300">日期</strong>现货表通常在北京时间 16:30 更新，工作流在 16:00 跑，所以现货日常常会比期货日早一天。两列日期都写在页头，不相等时不要把基差当成同一时刻的成交价差。</li>
+      </ul>
+      <p id="footnote" class="text-xs leading-relaxed text-slate-500"></p>
+      <p class="text-amber-500/90 text-xs leading-relaxed border-t border-slate-800 pt-3">
+        免责声明：仅供研究参考，不构成投资建议。现货数字引自生意社公开现期表，期货来自新浪财经，页面只保存报价并在本地重算基差，链回原表。生意社 robots.txt 未禁止 /sf/，其服务条款仍将页面内容列为受版权保护的材料。行情可能延迟、缺行，或因为夜盘离开日盘收盘价。
+        股指页见 <a class="underline text-amber-200" href="../">cffex-basis</a>，近月代理的期限贴水见 <a class="underline text-amber-200" href="../commodity/">商品页</a>，A/H 溢价见 <a class="underline text-amber-200" href="../ah-premium/">AH溢价</a>。
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const ROLE = { near: "近月", main: "主力", far: "远月" };
+    let DATA = null;
+    let sector = "全部";
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    function px(value) {
+      if (value == null || !isFinite(Number(value))) return "—";
+      const x = Number(value);
+      const digits = Math.abs(x - Math.round(x)) < 1e-6 ? 0 : 2;
+      return x.toLocaleString("zh-CN", { minimumFractionDigits: digits, maximumFractionDigits: 2 });
+    }
+
+    function basisText(value) {
+      if (value == null || !isFinite(Number(value))) return "—";
+      const x = Number(value);
+      const body = Math.abs(x).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (x > 0) return "+" + body;
+      if (x < 0) return "-" + body;
+      return body;
+    }
+
+    function annText(value) {
+      if (value == null || !isFinite(Number(value))) return "—";
+      const pct = Number(value) * 100;
+      const body = Math.abs(pct).toFixed(2) + "%";
+      if (pct > 0) return "+" + body;
+      if (pct < 0) return "-" + body;
+      return body;
+    }
+
+    function tone(value) {
+      if (value == null || !isFinite(Number(value)) || Number(value) === 0) return "text-slate-300";
+      return Number(value) > 0 ? "text-emerald-400" : "text-red-400";
+    }
+
+    function badge(product) {
+      if (!product.spot_available) return '<span class="tag tag-miss">暂无现货</span>';
+      if (product.quality === "spec_mismatch") return '<span class="tag tag-warn">规格不一</span>';
+      if (product.quality === "converted") return '<span class="tag tag-conv">已折算</span>';
+      return "";
+    }
+
+    function roleLabel(roles) {
+      if (!roles || !roles.length) return "其他";
+      return roles.map((role) => ROLE[role] || role).join(" · ");
+    }
+
+    function rowClass(roles) {
+      if (roles && roles.includes("main")) return "row-main";
+      if (roles && roles.includes("far")) return "row-far";
+      if (roles && roles.includes("near")) return "row-near";
+      return "";
+    }
+
+    function legCells(leg) {
+      if (!leg) {
+        return '<td class="px-3 py-2 text-slate-500">—</td><td class="px-3 py-2 text-right text-slate-500">—</td><td class="px-3 py-2 text-right text-slate-500">—</td>';
+      }
+      const title = `${leg.symbol} 到期 ${leg.expiry || "—"}，剩余 ${leg.dte == null ? "—" : leg.dte + " 日"}`;
+      return `<td class="px-3 py-2" title="${esc(title)}"><div class="text-slate-100">${esc(leg.symbol)}</div><div class="text-xs text-slate-400 num">${px(leg.price)}</div></td>`
+        + `<td class="px-3 py-2 text-right num ${tone(leg.basis)}">${basisText(leg.basis)}</td>`
+        + `<td class="px-3 py-2 text-right num ${tone(leg.ann)}">${annText(leg.ann)}</td>`;
+    }
+
+    function visibleProducts() {
+      return (DATA.products || []).filter((product) => sector === "全部" || product.sector === sector);
+    }
+
+    function renderFilters() {
+      const sectors = ["全部"];
+      (DATA.products || []).forEach((product) => {
+        if (!sectors.includes(product.sector)) sectors.push(product.sector);
+      });
+      document.getElementById("filters").innerHTML = sectors.map((name) => {
+        const pressed = name === sector ? "true" : "false";
+        return `<button type="button" class="chip rounded-full px-3 py-1 text-xs" data-sector="${esc(name)}" aria-pressed="${pressed}">${esc(name)}</button>`;
+      }).join("");
+    }
+
+    function renderOverview() {
+      const rows = visibleProducts().map((product) => {
+        const spot = product.spot_available
+          ? `<div class="num">${px(product.spot_price)}</div><div class="text-[11px] text-slate-500">${esc(product.spot_unit)}</div>`
+          : '<span class="text-slate-500">暂无</span>';
+        const extra = product.quality === "converted"
+          ? `<div class="text-[11px] text-sky-300 num">折 ${px(product.basis_price)} ${esc(product.basis_unit)}</div>`
+          : "";
+        return `<tr class="border-b border-slate-800/80">
+          <td class="px-3 py-2">
+            <a class="text-slate-100 hover:text-amber-200" href="#p-${esc(product.code)}">${esc(product.name)}</a>
+            <div class="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-slate-500"><span>${esc(product.code)} · ${esc(product.sector)}</span>${badge(product)}</div>
+          </td>
+          <td class="px-3 py-2 text-right" title="${esc(product.note || "")}">${spot}${extra}</td>
+          ${legCells(product.near)}
+          ${legCells(product.main)}
+          ${legCells(product.far)}
+        </tr>`;
+      }).join("");
+      document.getElementById("overviewBody").innerHTML = rows || '<tr><td colspan="11" class="px-3 py-8 text-center text-slate-500">这一栏没有品种</td></tr>';
+    }
+
+    function renderCards() {
+      document.getElementById("cards").innerHTML = visibleProducts().map((product) => {
+        const spotLine = product.spot_available
+          ? `现货 <strong class="text-slate-100 num">${px(product.spot_price)}</strong> ${esc(product.spot_unit)}`
+            + (product.quality === "converted" ? `，比较用 <strong class="text-sky-200 num">${px(product.basis_price)}</strong> ${esc(product.basis_unit)}` : "")
+          : "现货暂无，下面只列期货，不计算基差";
+        const alias = product.ppi_name && product.ppi_name !== product.name
+          ? `<span class="text-slate-500">生意社品名 ${esc(product.ppi_name)}</span>`
+          : "";
+        const note = product.note ? `<p class="text-xs text-amber-200/80 mt-2">${esc(product.note)}</p>` : "";
+        const curve = (product.curve || []).map((row) => `<tr class="border-b border-slate-800/80 ${rowClass(row.roles)}">
+            <td class="px-3 py-2 num">${esc(row.symbol)}</td>
+            <td class="px-3 py-2">${esc(roleLabel(row.roles))}</td>
+            <td class="px-3 py-2 num text-slate-300">${esc(row.expiry || "—")}</td>
+            <td class="px-3 py-2 text-right num">${row.dte == null ? "—" : esc(row.dte)}</td>
+            <td class="px-3 py-2 text-right num">${px(row.price)}</td>
+            <td class="px-3 py-2 text-right num ${tone(row.basis)}">${basisText(row.basis)}</td>
+            <td class="px-3 py-2 text-right num ${tone(row.ann)}">${annText(row.ann)}</td>
+            <td class="px-3 py-2 text-right num text-slate-400">${row.oi ? Number(row.oi).toLocaleString("zh-CN") : "—"}</td>
+            <td class="px-3 py-2 text-right num text-slate-400">${row.volume ? Number(row.volume).toLocaleString("zh-CN") : "—"}</td>
+          </tr>`).join("");
+        return `<section id="p-${esc(product.code)}" class="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 class="text-lg font-semibold">${esc(product.name)} <span class="text-sm font-normal text-slate-400 num">${esc(product.code)}</span></h2>
+            <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">${badge(product)}<span>${esc(product.exchange_name || product.exchange)} · ${esc(product.sector)}</span>${alias}</div>
+          </div>
+          <p class="text-sm text-slate-300 mt-2">${spotLine}</p>
+          ${note}
+          <div class="table-wrap mt-3">
+            <table class="min-w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+                  <th class="px-3 py-2 font-medium" scope="col">合约</th>
+                  <th class="px-3 py-2 font-medium" scope="col">角色</th>
+                  <th class="px-3 py-2 font-medium" scope="col">到期</th>
+                  <th class="px-3 py-2 font-medium text-right" scope="col">剩余</th>
+                  <th class="px-3 py-2 font-medium text-right" scope="col">期货</th>
+                  <th class="px-3 py-2 font-medium text-right" scope="col">基差</th>
+                  <th class="px-3 py-2 font-medium text-right" scope="col">年化</th>
+                  <th class="px-3 py-2 font-medium text-right" scope="col">持仓</th>
+                  <th class="px-3 py-2 font-medium text-right" scope="col">成交</th>
+                </tr>
+              </thead>
+              <tbody>${curve || '<tr><td colspan="9" class="px-3 py-4 text-slate-500">没有期货报价</td></tr>'}</tbody>
+            </table>
+          </div>
+        </section>`;
+      }).join("");
+    }
+
+    function renderBanner() {
+      const banner = document.getElementById("dateBanner");
+      const bits = [];
+      if (DATA.dates_aligned === false) {
+        bits.push(`现货日 ${DATA.spot_date || "—"} 和期货行情日 ${DATA.futures_date || "—"} 不是同一天。基差仍是两列数字相减。`);
+      }
+      if (DATA.futures_night_session) {
+        bits.push("这次期货最新价落在夜盘，已经离开日盘收盘，也不是结算价。");
+      }
+      banner.textContent = bits.join(" ");
+      banner.classList.toggle("hidden", bits.length === 0);
+    }
+
+    function render() {
+      const covered = DATA.coverage || {};
+      document.getElementById("summaryLine").textContent =
+        `${covered.tracked || 0} 个品种里 ${covered.with_spot || 0} 个有现货。现货 ${DATA.spot_published || DATA.spot_date || "—"}，期货行情日 ${DATA.futures_date || "—"}。`;
+      renderFilters();
+      renderOverview();
+      renderCards();
+      renderBanner();
+      const note = document.getElementById("footnote");
+      const src = DATA.source || {};
+      const link = src.spot_url ? `<a class="underline text-slate-400" href="${esc(src.spot_url)}" target="_blank" rel="noopener noreferrer">生意社原表</a>` : "生意社原表";
+      note.innerHTML = `${link}。${esc(src.futures_note || "")} ${esc(DATA.footnote || "")}`;
+    }
+
+    document.getElementById("filters").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-sector]");
+      if (!button || !DATA) return;
+      sector = button.getAttribute("data-sector");
+      render();
+    });
+
+    async function load() {
+      const status = document.getElementById("status");
+      try {
+        const res = await fetch("data/latest.json?t=" + Date.now());
+        if (!res.ok) throw new Error(String(res.status));
+        DATA = await res.json();
+        const when = DATA.generated_at ? DATA.generated_at.replace("T", " ").replace("+08:00", " 北京时间") : "—";
+        document.getElementById("ts").textContent = when;
+        status.textContent = `${(DATA.coverage || {}).with_spot || 0}/${(DATA.coverage || {}).tracked || 0}`;
+        status.className = "px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-200 text-xs";
+        render();
+      } catch (err) {
+        status.textContent = "读取失败";
+        status.className = "px-2 py-0.5 rounded bg-red-900/60 text-red-200 text-xs";
+        document.getElementById("overviewBody").innerHTML =
+          '<tr><td colspan="11" class="px-3 py-8 text-center text-red-300">读不到 data/latest.json</td></tr>';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

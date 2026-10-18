@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 .DS_Store
 commodity/data/cache/
+spot-basis/data/debug.json

@@ -10,6 +10,8 @@
 
 商品期货贴水：https://heber.github.io/cffex-basis/commodity/
 
+现金现货对期货的期现基差：https://heber.github.io/cffex-basis/spot-basis/
+
 ## 溢价怎么定义
 
 ```
