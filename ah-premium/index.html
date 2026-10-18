@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AH股溢价跟踪</title>
+  <meta name="description" content="A股与H股双重上市公司的AH溢价率。H股按港元兑人民币折成人民币后，与A股每股价格比较。静态页读取 data/latest.json。" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans SC"', "PingFang SC", "Microsoft YaHei", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+    .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    table { border-collapse: collapse; }
+    th, td { white-space: nowrap; }
+    .table-wrap { overflow-x: auto; }
+    .overview thead th { position: sticky; top: 0; background: #0f172a; z-index: 10; padding: 0; }
+    .overview th:first-child, .overview td:first-child {
+      position: sticky; left: 0; background: #020617; z-index: 5;
+    }
+    .overview thead th:first-child { z-index: 15; background: #0f172a; }
+    .chip { border: 1px solid #334155; background: #0f172a; color: #cbd5e1; }
+    .chip[aria-pressed="true"] { background: #b45309; border-color: #d97706; color: white; }
+    .overview thead .sort-btn {
+      display: flex; align-items: center; gap: 0.35rem; width: 100%;
+      margin: 0; padding: 0.5rem 0.75rem; border: 0; background: transparent;
+      color: inherit; font: inherit; line-height: inherit; cursor: pointer; text-align: inherit;
+    }
+    .overview thead .sort-btn-end { justify-content: flex-end; }
+    .overview thead .sort-btn:hover { color: #f8fafc; }
+    .overview thead .sort-btn:focus-visible { outline: 2px solid #d97706; outline-offset: -2px; }
+    .sort-mark { position: relative; flex: 0 0 8px; width: 8px; height: 10px; color: #64748b; }
+    .sort-mark::before, .sort-mark::after {
+      content: ""; position: absolute; left: 0;
+      border-left: 4px solid transparent; border-right: 4px solid transparent;
+    }
+    .sort-mark::before { top: 0; border-bottom: 4px solid currentColor; opacity: 0.55; }
+    .sort-mark::after { bottom: 0; border-top: 4px solid currentColor; opacity: 0.55; }
+    .overview thead th[aria-sort="ascending"] .sort-mark,
+    .overview thead th[aria-sort="descending"] .sort-mark { color: #fbbf24; }
+    .overview thead th[aria-sort="ascending"] .sort-mark::before,
+    .overview thead th[aria-sort="descending"] .sort-mark::after { opacity: 1; }
+    .overview thead th[aria-sort="ascending"] .sort-mark::after,
+    .overview thead th[aria-sort="descending"] .sort-mark::before { opacity: 0; }
+    .search {
+      background: #0f172a; border: 1px solid #334155; border-radius: 9999px;
+      padding: 0.35rem 0.9rem; color: #e2e8f0; min-width: 14rem;
+    }
+    .search:focus { outline: 2px solid #d97706; border-color: transparent; }
+    @media (min-width: 1600px) {
+      .table-wrap { overflow: visible; }
+      .overview thead th, .overview thead th:first-child { top: 4.6rem; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-30 backdrop-blur">
+    <div class="max-w-[96rem] mx-auto px-4 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">AH股溢价跟踪</h1>
+          <p class="text-slate-400 text-sm mt-1">
+            A股 / H股双重上市 · 折成人民币后的每股溢价
+            · <a class="underline hover:text-slate-200" href="../">股指贴水</a>
+            · <a class="underline hover:text-slate-200" href="../commodity/">商品贴水</a>
+          </p>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:w-auto sm:max-w-xl sm:justify-end">
+          <span id="ts" class="text-slate-400 num">—</span>
+          <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">加载中</span>
+          <a id="manualRefresh"
+             href="https://github.com/heber/cffex-basis/actions/workflows/update-ah-premium.yml"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-describedby="manualRefreshNote"
+             class="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">手动刷新</a>
+          <span id="manualRefreshNote" class="max-w-full text-[11px] leading-snug text-slate-500">需要写入权限，打开后点 Run workflow</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[96rem] mx-auto px-4 py-6 space-y-6">
+    <section class="rounded-xl border border-amber-700/40 bg-amber-950/30 p-4 md:p-5">
+      <h2 class="text-amber-300 font-semibold mb-2">AH溢价率怎么算</h2>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        同一家公司的 A 股用人民币报价，H 股用港元报价。先把 H 股折成人民币，再和 A 股比每股价格：
+      </p>
+      <p class="text-amber-100 text-sm leading-relaxed mt-2 num">
+        H股折合人民币 = H股价格（港元） × 港元兑人民币<br />
+        AH溢价率 = (A股价格 − H股折合人民币) / H股折合人民币
+      </p>
+      <p class="text-slate-300 text-sm leading-relaxed mt-2">
+        正数表示 <span class="text-red-300">A股溢价</span>（A 更贵），负数表示 <span class="text-emerald-300">A股折价</span>（A 更便宜）。
+        这是按每股比较的行业口径，1 股 A 对 1 股 H。不按买卖手数，也不是市值加权的恒生 AH 股溢价指数。
+        H 股很瘦时溢价会被放大，表默认按溢价从高到低排，中位数比最上面一行更接近整体。
+      </p>
+      <p id="fxLine" class="text-slate-300 text-sm leading-relaxed mt-2">汇率加载中。</p>
+      <div class="mt-3 flex flex-wrap gap-3 text-xs">
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600"></span>A股溢价（A 更贵）红</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span>A股折价（A 更便宜）绿</span>
+        <span class="text-slate-400">涨跌列只标方向，不用红绿，避免和溢价颜色混在一起</span>
+      </div>
+    </section>
+
+    <section class="flex flex-wrap items-center gap-2" id="fxToggle"></section>
+    <section class="flex flex-wrap items-center gap-2" id="filters"></section>
+    <section class="flex flex-wrap items-center gap-2">
+      <div id="directions" class="flex flex-wrap gap-2"></div>
+      <input id="q" class="search text-sm" type="search" placeholder="搜索名称或代码" aria-label="搜索名称或代码" />
+    </section>
+    <p id="calendarNote" class="text-xs text-amber-200/80"></p>
+    <div id="summary" class="grid grid-cols-2 md:grid-cols-5 gap-3"></div>
+    <p id="summaryLine" class="text-sm text-slate-300"></p>
+
+    <section class="space-y-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-sm font-semibold text-slate-300">双重上市名单</h2>
+        <p class="text-xs text-slate-500 flex items-center gap-2">
+          <span>点击列名排序，再点切换升降序</span>
+          <button type="button" id="sortReset" class="underline underline-offset-2 hover:text-slate-300 hidden">恢复溢价从高到低</button>
+        </p>
+      </div>
+      <div class="table-wrap rounded-xl border border-slate-800">
+        <table class="overview min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+              <th class="font-medium" data-sort="name" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>公司</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium" data-sort="sector" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>板块</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium" data-sort="aCode" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>A股</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium text-right" data-sort="aPrice" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>A价格(元)</span></button></th>
+              <th class="font-medium text-right" data-sort="aChg" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>A涨跌</span></button></th>
+              <th class="font-medium" data-sort="hCode" aria-sort="none" scope="col"><button type="button" class="sort-btn"><span>H股</span><span class="sort-mark" aria-hidden="true"></span></button></th>
+              <th class="font-medium text-right" data-sort="hPrice" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>H价格(港元)</span></button></th>
+              <th class="font-medium text-right" data-sort="hChg" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>H涨跌</span></button></th>
+              <th class="font-medium text-right" data-sort="hCny" aria-sort="none" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>H折人民币</span></button></th>
+              <th class="font-medium text-right" data-sort="premium" aria-sort="descending" scope="col"><button type="button" class="sort-btn sort-btn-end"><span class="sort-mark" aria-hidden="true"></span><span>AH溢价率</span></button></th>
+            </tr>
+          </thead>
+          <tbody id="overviewBody">
+            <tr><td colspan="10" class="px-3 py-8 text-center text-slate-500">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400 space-y-3">
+      <h2 class="text-slate-200 font-semibold">名单、汇率与免责声明</h2>
+      <ul class="list-disc list-inside space-y-1.5 leading-relaxed">
+        <li><strong class="text-slate-300">公式</strong>：AH溢价率 = (A股人民币价格 − H股折合人民币) / H股折合人民币。H股折合人民币 = H股港元价格 × 港元兑人民币。</li>
+        <li><strong class="text-slate-300">汇率</strong>：默认用新浪 <code class="text-slate-400">HKDCNY</code> 即期最新价（1 港元兑换的人民币）。可改用中国货币网公布的人民币汇率中间价，在浏览器里重算，不再请求行情。中间价每个交易日上午公布一次，即期会跟着离岸和在岸价格走。</li>
+        <li><strong class="text-slate-300">时间</strong>：A 股现金收盘约 15:00，H 股现金收盘约 16:00。快照不是同一秒的两笔成交。周末和节假日沿用最近交易日。</li>
+        <li><strong class="text-slate-300">比较单位</strong>：每股对每股，假定 1 股 A 与 1 股 H 是同一发行人的同等权益。不换算每手股数，不按市值加权，因此不等于恒生 AH 股溢价指数。</li>
+        <li><strong class="text-slate-300">名单</strong>：写在 <code class="text-slate-400">ah-premium/scripts/universe.py</code>，覆盖银行、保险、券商、能源、材料、工业、汽车、消费、医药、通信、交运和公用事业里常见的双重上市。报价名称对不上发行人的代码会被丢掉，不进表。</li>
+        <li><strong class="text-slate-300">不配对</strong>：中国建筑与中国建筑国际、中国电建与中广核电力不是同一发行人。只有 GDR、没有 H 股的公司（例如华友钴业）不收。H 股用港币柜台，不用人民币柜台。</li>
+        <li><strong class="text-slate-300">更新</strong>：工作日 16:00（北京时间）的 Action 重写 <code class="text-slate-400">data/latest.json</code>。页头「手动刷新」打开该工作流，需要仓库写入权限后再点 Run workflow。</li>
+      </ul>
+      <p class="text-amber-500/90 text-xs leading-relaxed border-t border-slate-800 pt-3">
+        免责声明：本页是 GitHub Pages 静态站，不运行行情服务器。数字以最近一次提交的快照为准。
+        仅供研究参考，不构成投资建议。行情来自新浪财经公开接口，汇率中间价来自中国货币网，可能延迟或缺失。
+        股指分红矫正贴水见 <a class="underline text-amber-200" href="../">股指贴水</a>，
+        商品贴水见 <a class="underline text-amber-200" href="../commodity/">商品贴水</a>。
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const SORT_META = {
+      name: { label: "公司", type: "str", defaultDir: "asc", pick: (p) => p.name },
+      sector: { label: "板块", type: "str", defaultDir: "asc", pick: (p) => p.sector },
+      aCode: { label: "A股", type: "str", defaultDir: "asc", pick: (p) => p.a_code },
+      aPrice: { label: "A价格", type: "num", defaultDir: "desc", pick: (p) => p.a_price },
+      aChg: { label: "A涨跌", type: "num", defaultDir: "desc", pick: (p) => p.a_change_pct },
+      hCode: { label: "H股", type: "str", defaultDir: "asc", pick: (p) => p.h_code },
+      hPrice: { label: "H价格", type: "num", defaultDir: "desc", pick: (p) => p.h_price_hkd },
+      hChg: { label: "H涨跌", type: "num", defaultDir: "desc", pick: (p) => p.h_change_pct },
+      hCny: { label: "H折人民币", type: "num", defaultDir: "desc", pick: (p) => p._hCny },
+      premium: { label: "AH溢价率", type: "num", defaultDir: "desc", pick: (p) => p._premium },
+    };
+    const DIRECTIONS = [
+      { id: "all", label: "全部方向" },
+      { id: "premium", label: "A股溢价" },
+      { id: "discount", label: "A股折价" },
+    ];
+    let SNAP = null;
+    let sector = "全部";
+    let direction = "all";
+    let query = "";
+    let fxMode = "spot";
+    let sortKey = "premium";
+    let sortDir = "desc";
+
+    function $(id) { return document.getElementById(id); }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    function fmtPx(value, digits) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      return Number(value).toLocaleString("zh-CN", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      });
+    }
+
+    function fmtPct(value, digits) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      const n = Number(value) * 100;
+      const sign = n > 0 ? "+" : "";
+      return sign + n.toFixed(digits) + "%";
+    }
+
+    function fmtFx(value) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      return Number(value).toFixed(5);
+    }
+
+    function premiumClass(value) {
+      if (value == null || Number(value) === 0 || Number.isNaN(Number(value))) return "text-slate-300";
+      return Number(value) > 0 ? "text-red-400" : "text-emerald-400";
+    }
+
+    function currentRate() {
+      const fx = (SNAP && SNAP.fx) || {};
+      if (fxMode === "pboc" && fx.pboc_mid) return Number(fx.pboc_mid);
+      return fx.rate == null ? null : Number(fx.rate);
+    }
+
+    function decorate(pair) {
+      const rate = currentRate();
+      const hCny = pair.h_price_hkd != null && rate > 0 ? pair.h_price_hkd * rate : null;
+      const premium = hCny > 0 && pair.a_price != null ? (pair.a_price - hCny) / hCny : null;
+      return Object.assign({}, pair, { _hCny: hCny, _premium: premium });
+    }
+
+    function missingSortValue(value, type) {
+      if (value == null || value === "") return true;
+      return type === "num" && Number.isNaN(Number(value));
+    }
+
+    function compareSortValues(a, b, type, dir) {
+      const aMissing = missingSortValue(a, type);
+      const bMissing = missingSortValue(b, type);
+      if (aMissing || bMissing) {
+        if (aMissing && bMissing) return 0;
+        return aMissing ? 1 : -1;
+      }
+      const cmp = type === "num"
+        ? Number(a) - Number(b)
+        : String(a).localeCompare(String(b), "zh-CN", { numeric: true, sensitivity: "base" });
+      if (cmp === 0) return 0;
+      return dir === "asc" ? cmp : -cmp;
+    }
+
+    function visiblePairs() {
+      const all = ((SNAP && SNAP.pairs) || []).map(decorate);
+      const q = query.trim().toLowerCase();
+      const list = all.filter((p) => {
+        if (sector !== "全部" && p.sector !== sector) return false;
+        if (direction === "premium" && !(p._premium > 0)) return false;
+        if (direction === "discount" && !(p._premium < 0)) return false;
+        if (!q) return true;
+        const hay = [p.name, p.sector, p.a_code, p.a_symbol, p.h_code, p.h_name, p.a_name].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+      const meta = SORT_META[sortKey];
+      if (!meta) return list;
+      return list
+        .map((p, i) => ({ p, i }))
+        .sort((a, b) => {
+          const cmp = compareSortValues(meta.pick(a.p), meta.pick(b.p), meta.type, sortDir);
+          return cmp !== 0 ? cmp : a.i - b.i;
+        })
+        .map((row) => row.p);
+    }
+
+    function median(values) {
+      if (!values.length) return null;
+      const ordered = values.slice().sort((a, b) => a - b);
+      const mid = Math.floor(ordered.length / 2);
+      if (ordered.length % 2) return ordered[mid];
+      return (ordered[mid - 1] + ordered[mid]) / 2;
+    }
+
+    function stats(list) {
+      const premiums = list.map((p) => p._premium).filter((v) => v != null && !Number.isNaN(v));
+      const mean = premiums.length ? premiums.reduce((sum, v) => sum + v, 0) / premiums.length : null;
+      return {
+        n: list.length,
+        up: premiums.filter((v) => v > 0).length,
+        down: premiums.filter((v) => v < 0).length,
+        mid: median(premiums),
+        mean,
+      };
+    }
+
+    function syncSortHeaders() {
+      document.querySelectorAll(".overview thead th[data-sort]").forEach((th) => {
+        const key = th.getAttribute("data-sort");
+        const meta = SORT_META[key];
+        const active = key === sortKey;
+        const btn = th.querySelector(".sort-btn");
+        th.setAttribute("aria-sort", active ? (sortDir === "asc" ? "ascending" : "descending") : "none");
+        if (btn && meta) {
+          btn.setAttribute("aria-label", active
+            ? meta.label + (sortDir === "asc" ? "，当前升序，点击改为降序" : "，当前降序，点击改为升序")
+            : "按" + meta.label + "排序");
+        }
+      });
+      const reset = $("sortReset");
+      if (reset) reset.classList.toggle("hidden", sortKey === "premium" && sortDir === "desc");
+    }
+
+    function chip(label, pressed, attr, value) {
+      return '<button type="button" class="chip text-xs px-3 py-1 rounded-full" ' + attr + '="' + esc(value) + '" aria-pressed="' + (pressed ? "true" : "false") + '">' + esc(label) + "</button>";
+    }
+
+    function renderFxToggle() {
+      const fx = (SNAP && SNAP.fx) || {};
+      const pbocOk = fx.pboc_mid != null;
+      const buttons = [
+        chip("即期汇率 " + fmtFx(fx.rate), fxMode === "spot", "data-fx", "spot"),
+        chip(pbocOk ? "央行中间价 " + fmtFx(fx.pboc_mid) : "央行中间价缺失", fxMode === "pboc", "data-fx", "pboc"),
+      ];
+      $("fxToggle").innerHTML = buttons.join("");
+      $("fxToggle").querySelectorAll("button").forEach((btn) => {
+        if (btn.getAttribute("data-fx") === "pboc" && !pbocOk) btn.disabled = true;
+        btn.addEventListener("click", () => {
+          const next = btn.getAttribute("data-fx");
+          if (next === "pboc" && !pbocOk) return;
+          fxMode = next;
+          render();
+        });
+      });
+    }
+
+    function renderFilters() {
+      const names = ["全部"].concat((SNAP && SNAP.sectors) || []);
+      $("filters").innerHTML = names.map((name) => chip(name, name === sector, "data-sector", name)).join("");
+      $("filters").querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          sector = btn.getAttribute("data-sector");
+          render();
+        });
+      });
+      $("directions").innerHTML = DIRECTIONS.map((item) => chip(item.label, item.id === direction, "data-direction", item.id)).join("");
+      $("directions").querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          direction = btn.getAttribute("data-direction");
+          render();
+        });
+      });
+    }
+
+    function renderSummary(list) {
+      const s = stats(list);
+      const fx = (SNAP && SNAP.fx) || {};
+      const rate = currentRate();
+      const rateLabel = fxMode === "pboc" ? "央行中间价" : "即期汇率";
+      const cards = [
+        ["当前筛选", String(s.n), "家有报价"],
+        ["A股溢价", String(s.up), "A 更贵"],
+        ["A股折价", String(s.down), "A 更便宜"],
+        ["中位溢价", fmtPct(s.mid, 2), "当前筛选"],
+        [rateLabel, fmtFx(rate), "1 港元兑人民币"],
+      ];
+      $("summary").innerHTML = cards.map((card) => (
+        '<div class="rounded-xl border border-slate-800 bg-slate-900 px-3 py-3">' +
+          '<div class="text-[11px] text-slate-500">' + esc(card[0]) + "</div>" +
+          '<div class="num text-lg font-semibold mt-1 ' + (card[0] === "中位溢价" ? premiumClass(s.mid) : "") + '">' + esc(card[1]) + "</div>" +
+          '<div class="text-[11px] text-slate-500 mt-0.5">' + esc(card[2]) + "</div>" +
+        "</div>"
+      )).join("");
+      const mean = s.mean == null ? "—" : fmtPct(s.mean, 2);
+      $("summaryLine").textContent = "等权平均溢价 " + mean + " · 中位数少受极端值拉动 · 格子里的溢价随上方汇率切换重算";
+      const bits = [];
+      if (SNAP.as_of) bits.push("A股行情日 " + SNAP.as_of + "。");
+      if (SNAP.h_as_of) bits.push("H股行情日 " + SNAP.h_as_of + "。");
+      if (fx.quote_date) bits.push("即期汇率 " + fx.quote_date + (fx.quote_time ? " " + fx.quote_time : "") + "。");
+      if (fx.pboc_date) bits.push("中间价 " + fx.pboc_date + "。");
+      bits.push("周末和节假日沿用最近交易日。");
+      $("calendarNote").textContent = bits.join(" ");
+      const fxBits = [
+        "当前计算用" + rateLabel + " " + fmtFx(rate) + "（1 港元 = " + fmtFx(rate) + " 人民币）。",
+        fx.source ? "即期来源：" + fx.source + "。" : "",
+        fx.pboc_source && fx.pboc_mid != null ? "中间价来源：" + fx.pboc_source + " " + fmtFx(fx.pboc_mid) + "。" : "这次快照没有取到中间价，溢价只用即期。",
+      ];
+      $("fxLine").textContent = fxBits.filter(Boolean).join(" ");
+    }
+
+    function aLabel(pair) {
+      const ex = String(pair.a_symbol || "").startsWith("sz") ? "深" : "沪";
+      return ex + pair.a_code;
+    }
+
+    function renderTable(list) {
+      if (!list.length) {
+        $("overviewBody").innerHTML = '<tr><td colspan="10" class="px-3 py-8 text-center text-slate-500">这个筛选下没有公司。</td></tr>';
+        return;
+      }
+      $("overviewBody").innerHTML = list.map((p) => {
+        const title = esc(p.name) + " A " + esc(p.a_name || "") + " / H " + esc(p.h_name || "");
+        return '<tr class="border-b border-slate-800/80 hover:bg-slate-900">' +
+          '<td class="px-3 py-2"><div class="font-medium" title="' + title + '">' + esc(p.name) + "</div></td>" +
+          '<td class="px-3 py-2 text-slate-400">' + esc(p.sector) + "</td>" +
+          '<td class="px-3 py-2 num">' + esc(aLabel(p)) + "</td>" +
+          '<td class="px-3 py-2 num text-right">' + fmtPx(p.a_price, 2) + "</td>" +
+          '<td class="px-3 py-2 num text-right text-slate-300">' + fmtPct(p.a_change_pct, 2) + "</td>" +
+          '<td class="px-3 py-2 num">' + esc(p.h_code) + ".HK</td>" +
+          '<td class="px-3 py-2 num text-right">' + fmtPx(p.h_price_hkd, 3) + "</td>" +
+          '<td class="px-3 py-2 num text-right text-slate-300">' + fmtPct(p.h_change_pct, 2) + "</td>" +
+          '<td class="px-3 py-2 num text-right">' + fmtPx(p._hCny, 2) + "</td>" +
+          '<td class="px-3 py-2 num text-right font-semibold ' + premiumClass(p._premium) + '">' + fmtPct(p._premium, 2) + "</td>" +
+        "</tr>";
+      }).join("");
+    }
+
+    function render() {
+      renderFxToggle();
+      renderFilters();
+      syncSortHeaders();
+      const list = visiblePairs();
+      renderSummary(list);
+      renderTable(list);
+    }
+
+    async function load() {
+      $("status").textContent = "加载中";
+      try {
+        const res = await fetch("data/latest.json?t=" + Date.now());
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        SNAP = await res.json();
+        if (!SNAP.pairs || !SNAP.pairs.length) throw new Error("快照为空");
+        const gen = (SNAP.generated_at || "").replace("T", " ").replace("+08:00", " 北京时间");
+        $("ts").textContent = gen || "—";
+        $("status").textContent = "已加载";
+        $("status").className = "px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 text-xs";
+        render();
+      } catch (err) {
+        $("status").textContent = "加载失败";
+        $("status").className = "px-2 py-0.5 rounded bg-red-900 text-red-200 text-xs";
+        $("overviewBody").innerHTML = '<tr><td colspan="10" class="px-3 py-8 text-center text-red-300">读不到 data/latest.json（' + esc(err.message) + "）。请先运行 scripts/fetch_premium.py。</td></tr>";
+        $("summaryLine").textContent = "";
+      }
+    }
+
+    document.querySelectorAll(".overview thead th[data-sort] .sort-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!SNAP) return;
+        const key = btn.closest("th").getAttribute("data-sort");
+        if (!SORT_META[key]) return;
+        if (sortKey === key) sortDir = sortDir === "asc" ? "desc" : "asc";
+        else {
+          sortKey = key;
+          sortDir = SORT_META[key].defaultDir;
+        }
+        render();
+      });
+    });
+    $("sortReset").addEventListener("click", () => {
+      sortKey = "premium";
+      sortDir = "desc";
+      render();
+    });
+    $("q").addEventListener("input", () => {
+      query = $("q").value || "";
+      if (SNAP) render();
+    });
+    load();
+  </script>
+</body>
+</html>
