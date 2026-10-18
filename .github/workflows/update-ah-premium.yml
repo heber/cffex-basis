@@ -1,0 +1,52 @@
+name: Update AH premium
+
+on:
+  schedule:
+    # Weekdays at 16:00 Asia/Shanghai (08:00 UTC), after the A-share cash close.
+    # H-shares close an hour later; the snapshot uses the latest print Sina has.
+    # Markets are closed on weekends, so this does not run Sat/Sun.
+    # GitHub may delay or skip a scheduled run. Use workflow_dispatch to backfill.
+    - cron: "0 8 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Same group as update-basis.yml and update-commodity-basis.yml.
+# Concurrency groups are repository-wide, so the 16:00 jobs queue instead of
+# pushing together. cancel-in-progress stays false so a queued run still finishes.
+# pull --rebase covers a commit that landed after this job checked out.
+concurrency:
+  group: update-basis
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch AH premium snapshot
+        run: python ah-premium/scripts/fetch_premium.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ah-premium/data
+          if git diff --cached --quiet; then
+            echo "AH premium snapshot unchanged"
+          else
+            git commit -m "data: update AH premium snapshot"
+            git pull --rebase origin main
+            git push
+          fi
