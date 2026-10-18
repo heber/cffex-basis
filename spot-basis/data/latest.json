@@ -1,0 +1,4252 @@
+{
+  "generated_at": "2026-10-18T10:42:27+08:00",
+  "spot_date": "2026-10-16",
+  "spot_published": "2026-10-16 16:30",
+  "futures_date": "2026-10-16",
+  "dates_aligned": true,
+  "futures_night_session": true,
+  "source": {
+    "spot": "生意社现期表",
+    "spot_url": "https://www.100ppi.com/sf/day-2026-10-16.html",
+    "spot_page": "https://www.100ppi.com/sf/",
+    "futures": "新浪财经 hq.sinajs.cn",
+    "futures_note": "期货是新浪最新价。工作日 16:00 的快照通常还在日盘；夜盘之后最新价会离开日盘收盘，也不是结算价。"
+  },
+  "coverage": {
+    "tracked": 35,
+    "with_spot": 31
+  },
+  "footnote": "备注：现期差=现货价格-期货价格（这里的期货价格为结算价） 黄金为元/克，白银为元/千克，玻璃现货为元/平方米，鸡蛋现货为元/公斤，鸡蛋期货为元/500千克，其余元/吨。 焦炭现货规格是：一级冶金焦，焦炭期货规格：介于一级和二级之间，焦炭现期差仅供参考。 铁矿石现货价格是：湿吨，铁矿石期货价格是：干吨 燃料油现货规格是：型号:180CST，燃料油期货规格：RMG 380船用燃料油（硫含量为I级、II级），燃料油现期差仅供参考。 烧碱现货价格是：32%液碱，烧碱期货价格是：100%纯烧碱（干吨，折百价）",
+  "products": [
+    {
+      "code": "i",
+      "name": "铁矿石",
+      "ppi_name": "铁矿石",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "黑色",
+      "spot_available": true,
+      "spot_price": 662.44,
+      "spot_unit": "元/湿吨",
+      "basis_price": 662.44,
+      "basis_unit": "元/吨",
+      "quality": "spec_mismatch",
+      "conversion": null,
+      "note": "现货是湿吨，期货是干吨。数字直接相减，没有按水分折成干吨。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "i2611",
+        "price": 692.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 60690,
+        "volume": 5264,
+        "basis": -29.56,
+        "ann": -0.581691
+      },
+      "main": {
+        "symbol": "i2701",
+        "price": 685.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 608849,
+        "volume": 171101,
+        "basis": -22.56,
+        "ann": -0.138116
+      },
+      "far": {
+        "symbol": "i2705",
+        "price": 677.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 144073,
+        "volume": 14035,
+        "basis": -14.56,
+        "ann": -0.038202
+      },
+      "curve": [
+        {
+          "symbol": "i2611",
+          "price": 692.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 60690,
+          "volume": 5264,
+          "basis": -29.56,
+          "ann": -0.581691,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "i2612",
+          "price": 688.5,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 96202,
+          "volume": 4693,
+          "basis": -26.06,
+          "ann": -0.243371,
+          "roles": []
+        },
+        {
+          "symbol": "i2701",
+          "price": 685.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 608849,
+          "volume": 171101,
+          "basis": -22.56,
+          "ann": -0.138116,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "i2702",
+          "price": 682.5,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 76623,
+          "volume": 1333,
+          "basis": -20.06,
+          "ann": -0.092882,
+          "roles": []
+        },
+        {
+          "symbol": "i2703",
+          "price": 681.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 66555,
+          "volume": 1064,
+          "basis": -18.56,
+          "ann": -0.069568,
+          "roles": []
+        },
+        {
+          "symbol": "i2705",
+          "price": 677.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 144073,
+          "volume": 14035,
+          "basis": -14.56,
+          "ann": -0.038202,
+          "roles": [
+            "far"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "j",
+      "name": "焦炭",
+      "ppi_name": "焦炭",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "黑色",
+      "spot_available": true,
+      "spot_price": 2125.0,
+      "spot_unit": "元/吨",
+      "basis_price": 2125.0,
+      "basis_unit": "元/吨",
+      "quality": "spec_mismatch",
+      "conversion": null,
+      "note": "现货为一级冶金焦，期货交割品介于一级和二级之间。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "j2611",
+        "price": 1977.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 4227,
+        "volume": 76,
+        "basis": 148.0,
+        "ann": 0.907899
+      },
+      "main": {
+        "symbol": "j2701",
+        "price": 1974.5,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 49242,
+        "volume": 10870,
+        "basis": 150.5,
+        "ann": 0.287229
+      },
+      "far": {
+        "symbol": "j2705",
+        "price": 1904.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 2960,
+        "volume": 496,
+        "basis": 221.0,
+        "ann": 0.180762
+      },
+      "curve": [
+        {
+          "symbol": "j2611",
+          "price": 1977.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 4227,
+          "volume": 76,
+          "basis": 148.0,
+          "ann": 0.907899,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "j2612",
+          "price": 1966.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 3166,
+          "volume": 11,
+          "basis": 159.0,
+          "ann": 0.462891,
+          "roles": []
+        },
+        {
+          "symbol": "j2701",
+          "price": 1974.5,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 49242,
+          "volume": 10870,
+          "basis": 150.5,
+          "ann": 0.287229,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "j2702",
+          "price": 1945.5,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 1486,
+          "volume": 3,
+          "basis": 179.5,
+          "ann": 0.25909,
+          "roles": []
+        },
+        {
+          "symbol": "j2703",
+          "price": 1925.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 826,
+          "volume": 2,
+          "basis": 200.0,
+          "ann": 0.233693,
+          "roles": []
+        },
+        {
+          "symbol": "j2705",
+          "price": 1904.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 2960,
+          "volume": 496,
+          "basis": 221.0,
+          "ann": 0.180762,
+          "roles": [
+            "far"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "jm",
+      "name": "焦煤",
+      "ppi_name": "焦煤",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "黑色",
+      "spot_available": true,
+      "spot_price": 2203.75,
+      "spot_unit": "元/吨",
+      "basis_price": 2203.75,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "jm2611",
+        "price": 1444.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 58904,
+        "volume": 22376,
+        "basis": 759.75,
+        "ann": 4.494105
+      },
+      "main": {
+        "symbol": "jm2701",
+        "price": 1471.5,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 432671,
+        "volume": 269622,
+        "basis": 732.25,
+        "ann": 1.347558
+      },
+      "far": {
+        "symbol": "jm2705",
+        "price": 1352.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 84293,
+        "volume": 17114,
+        "basis": 851.75,
+        "ann": 0.671774
+      },
+      "curve": [
+        {
+          "symbol": "jm2611",
+          "price": 1444.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 58904,
+          "volume": 22376,
+          "basis": 759.75,
+          "ann": 4.494105,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "jm2612",
+          "price": 1401.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 68632,
+          "volume": 8660,
+          "basis": 802.75,
+          "ann": 2.253507,
+          "roles": []
+        },
+        {
+          "symbol": "jm2701",
+          "price": 1471.5,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 432671,
+          "volume": 269622,
+          "basis": 732.25,
+          "ann": 1.347558,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "jm2702",
+          "price": 1436.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 32102,
+          "volume": 2594,
+          "basis": 767.75,
+          "ann": 1.068571,
+          "roles": []
+        },
+        {
+          "symbol": "jm2703",
+          "price": 1400.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 23759,
+          "volume": 1515,
+          "basis": 803.75,
+          "ann": 0.905595,
+          "roles": []
+        },
+        {
+          "symbol": "jm2705",
+          "price": 1352.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 84293,
+          "volume": 17114,
+          "basis": 851.75,
+          "ann": 0.671774,
+          "roles": [
+            "far"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "rb",
+      "name": "螺纹钢",
+      "ppi_name": "螺纹钢",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "黑色",
+      "spot_available": true,
+      "spot_price": 3164.84,
+      "spot_unit": "元/吨",
+      "basis_price": 3164.84,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "rb2611",
+        "price": 3108.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 24978,
+        "volume": 2666,
+        "basis": 56.84,
+        "ann": 0.211463
+      },
+      "main": {
+        "symbol": "rb2701",
+        "price": 3086.0,
+        "expiry": "2027-01-15",
+        "dte": 91,
+        "oi": 1730811,
+        "volume": 261956,
+        "basis": 78.84,
+        "ann": 0.099919
+      },
+      "far": {
+        "symbol": "rb2703",
+        "price": 3086.0,
+        "expiry": "2027-03-15",
+        "dte": 150,
+        "oi": 401757,
+        "volume": 15611,
+        "basis": 78.84,
+        "ann": 0.060617
+      },
+      "curve": [
+        {
+          "symbol": "rb2611",
+          "price": 3108.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 24978,
+          "volume": 2666,
+          "basis": 56.84,
+          "ann": 0.211463,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "rb2612",
+          "price": 3089.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 8038,
+          "volume": 211,
+          "basis": 75.84,
+          "ann": 0.145777,
+          "roles": []
+        },
+        {
+          "symbol": "rb2701",
+          "price": 3086.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 1730811,
+          "volume": 261956,
+          "basis": 78.84,
+          "ann": 0.099919,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "rb2703",
+          "price": 3086.0,
+          "expiry": "2027-03-15",
+          "dte": 150,
+          "oi": 401757,
+          "volume": 15611,
+          "basis": 78.84,
+          "ann": 0.060617,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "rb2704",
+          "price": 3095.0,
+          "expiry": "2027-04-15",
+          "dte": 181,
+          "oi": 19513,
+          "volume": 45,
+          "basis": 69.84,
+          "ann": 0.044501,
+          "roles": []
+        },
+        {
+          "symbol": "rb2705",
+          "price": 3103.0,
+          "expiry": "2027-05-17",
+          "dte": 213,
+          "oi": 143808,
+          "volume": 9490,
+          "basis": 61.84,
+          "ann": 0.033484,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "hc",
+      "name": "热轧卷板",
+      "ppi_name": "热轧卷板",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "黑色",
+      "spot_available": true,
+      "spot_price": 3254.0,
+      "spot_unit": "元/吨",
+      "basis_price": 3254.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "hc2611",
+        "price": 3233.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 25438,
+        "volume": 1280,
+        "basis": 21.0,
+        "ann": 0.075986
+      },
+      "main": {
+        "symbol": "hc2701",
+        "price": 3255.0,
+        "expiry": "2027-01-15",
+        "dte": 91,
+        "oi": 1537848,
+        "volume": 145284,
+        "basis": -1.0,
+        "ann": -0.001233
+      },
+      "far": {
+        "symbol": "hc2703",
+        "price": 3262.0,
+        "expiry": "2027-03-15",
+        "dte": 150,
+        "oi": 258619,
+        "volume": 13365,
+        "basis": -8.0,
+        "ann": -0.005982
+      },
+      "curve": [
+        {
+          "symbol": "hc2611",
+          "price": 3233.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 25438,
+          "volume": 1280,
+          "basis": 21.0,
+          "ann": 0.075986,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "hc2612",
+          "price": 3241.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 2014,
+          "volume": 231,
+          "basis": 13.0,
+          "ann": 0.024303,
+          "roles": []
+        },
+        {
+          "symbol": "hc2701",
+          "price": 3255.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 1537848,
+          "volume": 145284,
+          "basis": -1.0,
+          "ann": -0.001233,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "hc2702",
+          "price": 3268.0,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 263,
+          "volume": 47,
+          "basis": -14.0,
+          "ann": -0.012872,
+          "roles": []
+        },
+        {
+          "symbol": "hc2703",
+          "price": 3262.0,
+          "expiry": "2027-03-15",
+          "dte": 150,
+          "oi": 258619,
+          "volume": 13365,
+          "basis": -8.0,
+          "ann": -0.005982,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "hc2705",
+          "price": 3269.0,
+          "expiry": "2027-05-17",
+          "dte": 213,
+          "oi": 48977,
+          "volume": 3862,
+          "basis": -15.0,
+          "ann": -0.007899,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "m",
+      "name": "豆粕",
+      "ppi_name": "豆粕",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "油脂油料",
+      "spot_available": true,
+      "spot_price": 3358.0,
+      "spot_unit": "元/吨",
+      "basis_price": 3358.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "m2611",
+        "price": 3229.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 313923,
+        "volume": 29206,
+        "basis": 129.0,
+        "ann": 0.500776
+      },
+      "main": {
+        "symbol": "m2701",
+        "price": 3268.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 2301224,
+        "volume": 399461,
+        "basis": 90.0,
+        "ann": 0.108696
+      },
+      "far": {
+        "symbol": "m2705",
+        "price": 2930.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 835173,
+        "volume": 98521,
+        "basis": 428.0,
+        "ann": 0.221532
+      },
+      "curve": [
+        {
+          "symbol": "m2611",
+          "price": 3229.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 313923,
+          "volume": 29206,
+          "basis": 129.0,
+          "ann": 0.500776,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "m2612",
+          "price": 3281.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 295519,
+          "volume": 10547,
+          "basis": 77.0,
+          "ann": 0.141857,
+          "roles": []
+        },
+        {
+          "symbol": "m2701",
+          "price": 3268.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 2301224,
+          "volume": 399461,
+          "basis": 90.0,
+          "ann": 0.108696,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "m2703",
+          "price": 3204.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 411264,
+          "volume": 17019,
+          "basis": 154.0,
+          "ann": 0.113872,
+          "roles": []
+        },
+        {
+          "symbol": "m2705",
+          "price": 2930.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 835173,
+          "volume": 98521,
+          "basis": 428.0,
+          "ann": 0.221532,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "m2707",
+          "price": 2888.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 262649,
+          "volume": 5675,
+          "basis": 470.0,
+          "ann": 0.188513,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "y",
+      "name": "豆油",
+      "ppi_name": "豆油",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "油脂油料",
+      "spot_available": true,
+      "spot_price": 8894.0,
+      "spot_unit": "元/吨",
+      "basis_price": 8894.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "y2611",
+        "price": 8796.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 79303,
+        "volume": 2790,
+        "basis": 98.0,
+        "ann": 0.143636
+      },
+      "main": {
+        "symbol": "y2701",
+        "price": 8863.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 545383,
+        "volume": 81869,
+        "basis": 31.0,
+        "ann": 0.014136
+      },
+      "far": {
+        "symbol": "y2705",
+        "price": 8723.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 280899,
+        "volume": 15237,
+        "basis": 171.0,
+        "ann": 0.033417
+      },
+      "curve": [
+        {
+          "symbol": "y2611",
+          "price": 8796.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 79303,
+          "volume": 2790,
+          "basis": 98.0,
+          "ann": 0.143636,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "y2612",
+          "price": 8861.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 105975,
+          "volume": 935,
+          "basis": 33.0,
+          "ann": 0.022954,
+          "roles": []
+        },
+        {
+          "symbol": "y2701",
+          "price": 8863.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 545383,
+          "volume": 81869,
+          "basis": 31.0,
+          "ann": 0.014136,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "y2703",
+          "price": 8808.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 113352,
+          "volume": 1778,
+          "basis": 86.0,
+          "ann": 0.024009,
+          "roles": []
+        },
+        {
+          "symbol": "y2705",
+          "price": 8723.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 280899,
+          "volume": 15237,
+          "basis": 171.0,
+          "ann": 0.033417,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "y2707",
+          "price": 8673.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 54315,
+          "volume": 269,
+          "basis": 221.0,
+          "ann": 0.033467,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "p",
+      "name": "棕榈油",
+      "ppi_name": "棕榈油",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "油脂油料",
+      "spot_available": true,
+      "spot_price": 9290.0,
+      "spot_unit": "元/吨",
+      "basis_price": 9290.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "p2611",
+        "price": 9214.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 34841,
+        "volume": 3185,
+        "basis": 76.0,
+        "ann": 0.106643
+      },
+      "main": {
+        "symbol": "p2701",
+        "price": 9478.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 606718,
+        "volume": 124896,
+        "basis": -188.0,
+        "ann": -0.082072
+      },
+      "far": {
+        "symbol": "p2705",
+        "price": 10055.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 380403,
+        "volume": 40225,
+        "basis": -765.0,
+        "ann": -0.143126
+      },
+      "curve": [
+        {
+          "symbol": "p2611",
+          "price": 9214.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 34841,
+          "volume": 3185,
+          "basis": 76.0,
+          "ann": 0.106643,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "p2612",
+          "price": 9299.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 37615,
+          "volume": 653,
+          "basis": -9.0,
+          "ann": -0.005993,
+          "roles": []
+        },
+        {
+          "symbol": "p2701",
+          "price": 9478.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 606718,
+          "volume": 124896,
+          "basis": -188.0,
+          "ann": -0.082072,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "p2703",
+          "price": 9756.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 36355,
+          "volume": 1024,
+          "basis": -466.0,
+          "ann": -0.124551,
+          "roles": []
+        },
+        {
+          "symbol": "p2705",
+          "price": 10055.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 380403,
+          "volume": 40225,
+          "basis": -765.0,
+          "ann": -0.143126,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "p2709",
+          "price": 10112.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 71525,
+          "volume": 7775,
+          "basis": -822.0,
+          "ann": -0.096985,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "OI",
+      "name": "菜油",
+      "ppi_name": "菜籽油OI",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "油脂油料",
+      "spot_available": true,
+      "spot_price": 10736.0,
+      "spot_unit": "元/吨",
+      "basis_price": 10736.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "OI2611",
+        "price": 10501.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 22699,
+        "volume": 1539,
+        "basis": 235.0,
+        "ann": 0.285338
+      },
+      "main": {
+        "symbol": "OI2701",
+        "price": 10221.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 349183,
+        "volume": 83672,
+        "basis": 515.0,
+        "ann": 0.194543
+      },
+      "far": {
+        "symbol": "OI2703",
+        "price": 10062.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 86922,
+        "volume": 9678,
+        "basis": 674.0,
+        "ann": 0.155881
+      },
+      "curve": [
+        {
+          "symbol": "OI2611",
+          "price": 10501.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 22699,
+          "volume": 1539,
+          "basis": 235.0,
+          "ann": 0.285338,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "OI2701",
+          "price": 10221.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 349183,
+          "volume": 83672,
+          "basis": 515.0,
+          "ann": 0.194543,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "OI2703",
+          "price": 10062.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 86922,
+          "volume": 9678,
+          "basis": 674.0,
+          "ann": 0.155881,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "OI2705",
+          "price": 9925.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 62236,
+          "volume": 5828,
+          "basis": 811.0,
+          "ann": 0.131296,
+          "roles": []
+        },
+        {
+          "symbol": "OI2707",
+          "price": 9914.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 806,
+          "volume": 219,
+          "basis": 822.0,
+          "ann": 0.103122,
+          "roles": []
+        },
+        {
+          "symbol": "OI2709",
+          "price": 9895.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 1231,
+          "volume": 182,
+          "basis": 841.0,
+          "ann": 0.085862,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "RM",
+      "name": "菜粕",
+      "ppi_name": "菜籽粕",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "油脂油料",
+      "spot_available": true,
+      "spot_price": 2460.0,
+      "spot_unit": "元/吨",
+      "basis_price": 2460.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "RM2611",
+        "price": 2320.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 41346,
+        "volume": 9480,
+        "basis": 140.0,
+        "ann": 0.74187
+      },
+      "main": {
+        "symbol": "RM2701",
+        "price": 2352.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 701065,
+        "volume": 259022,
+        "basis": 108.0,
+        "ann": 0.178049
+      },
+      "far": {
+        "symbol": "RM2703",
+        "price": 2302.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 249821,
+        "volume": 42588,
+        "basis": 158.0,
+        "ann": 0.159477
+      },
+      "curve": [
+        {
+          "symbol": "RM2611",
+          "price": 2320.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 41346,
+          "volume": 9480,
+          "basis": 140.0,
+          "ann": 0.74187,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "RM2701",
+          "price": 2352.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 701065,
+          "volume": 259022,
+          "basis": 108.0,
+          "ann": 0.178049,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "RM2703",
+          "price": 2302.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 249821,
+          "volume": 42588,
+          "basis": 158.0,
+          "ann": 0.159477,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "RM2705",
+          "price": 2345.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 133204,
+          "volume": 25904,
+          "basis": 115.0,
+          "ann": 0.081252,
+          "roles": []
+        },
+        {
+          "symbol": "RM2707",
+          "price": 2330.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 11778,
+          "volume": 1481,
+          "basis": 130.0,
+          "ann": 0.071176,
+          "roles": []
+        },
+        {
+          "symbol": "RM2709",
+          "price": 2384.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 4808,
+          "volume": 1008,
+          "basis": 76.0,
+          "ann": 0.033863,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "cu",
+      "name": "沪铜",
+      "ppi_name": "铜",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "有色贵金属",
+      "spot_available": true,
+      "spot_price": 110565.0,
+      "spot_unit": "元/吨",
+      "basis_price": 110565.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "cu2611",
+        "price": 109420.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 176930,
+        "volume": 21449,
+        "basis": 1145.0,
+        "ann": 0.121932
+      },
+      "main": {
+        "symbol": "cu2611",
+        "price": 109420.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 176930,
+        "volume": 21449,
+        "basis": 1145.0,
+        "ann": 0.121932
+      },
+      "far": {
+        "symbol": "cu2612",
+        "price": 108720.0,
+        "expiry": "2026-12-15",
+        "dte": 60,
+        "oi": 162500,
+        "volume": 15103,
+        "basis": 1845.0,
+        "ann": 0.101513
+      },
+      "curve": [
+        {
+          "symbol": "cu2611",
+          "price": 109420.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 176930,
+          "volume": 21449,
+          "basis": 1145.0,
+          "ann": 0.121932,
+          "roles": [
+            "near",
+            "main"
+          ]
+        },
+        {
+          "symbol": "cu2612",
+          "price": 108720.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 162500,
+          "volume": 15103,
+          "basis": 1845.0,
+          "ann": 0.101513,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "cu2701",
+          "price": 108120.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 68229,
+          "volume": 5211,
+          "basis": 2445.0,
+          "ann": 0.088698,
+          "roles": []
+        },
+        {
+          "symbol": "cu2702",
+          "price": 107800.0,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 31805,
+          "volume": 1114,
+          "basis": 2765.0,
+          "ann": 0.074819,
+          "roles": []
+        },
+        {
+          "symbol": "cu2703",
+          "price": 107690.0,
+          "expiry": "2027-03-15",
+          "dte": 150,
+          "oi": 33141,
+          "volume": 630,
+          "basis": 2875.0,
+          "ann": 0.063273,
+          "roles": []
+        },
+        {
+          "symbol": "cu2704",
+          "price": 107670.0,
+          "expiry": "2027-04-15",
+          "dte": 181,
+          "oi": 16127,
+          "volume": 144,
+          "basis": 2895.0,
+          "ann": 0.052801,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "al",
+      "name": "沪铝",
+      "ppi_name": "铝",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "有色贵金属",
+      "spot_available": true,
+      "spot_price": 23283.33,
+      "spot_unit": "元/吨",
+      "basis_price": 23283.33,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "al2611",
+        "price": 23315.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 198995,
+        "volume": 74514,
+        "basis": -31.67,
+        "ann": -0.016015
+      },
+      "main": {
+        "symbol": "al2611",
+        "price": 23315.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 198995,
+        "volume": 74514,
+        "basis": -31.67,
+        "ann": -0.016015
+      },
+      "far": {
+        "symbol": "al2612",
+        "price": 23010.0,
+        "expiry": "2026-12-15",
+        "dte": 60,
+        "oi": 212102,
+        "volume": 60846,
+        "basis": 273.33,
+        "ann": 0.071414
+      },
+      "curve": [
+        {
+          "symbol": "al2611",
+          "price": 23315.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 198995,
+          "volume": 74514,
+          "basis": -31.67,
+          "ann": -0.016015,
+          "roles": [
+            "near",
+            "main"
+          ]
+        },
+        {
+          "symbol": "al2612",
+          "price": 23010.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 212102,
+          "volume": 60846,
+          "basis": 273.33,
+          "ann": 0.071414,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "al2701",
+          "price": 22820.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 106172,
+          "volume": 30011,
+          "basis": 463.33,
+          "ann": 0.079817,
+          "roles": []
+        },
+        {
+          "symbol": "al2702",
+          "price": 22660.0,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 66727,
+          "volume": 9686,
+          "basis": 623.33,
+          "ann": 0.080095,
+          "roles": []
+        },
+        {
+          "symbol": "al2703",
+          "price": 22630.0,
+          "expiry": "2027-03-15",
+          "dte": 150,
+          "oi": 45878,
+          "volume": 5976,
+          "basis": 653.33,
+          "ann": 0.068279,
+          "roles": []
+        },
+        {
+          "symbol": "al2704",
+          "price": 22640.0,
+          "expiry": "2027-04-15",
+          "dte": 181,
+          "oi": 25004,
+          "volume": 1064,
+          "basis": 643.33,
+          "ann": 0.055719,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "zn",
+      "name": "沪锌",
+      "ppi_name": "锌",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "有色贵金属",
+      "spot_available": true,
+      "spot_price": 25453.0,
+      "spot_unit": "元/吨",
+      "basis_price": 25453.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "zn2611",
+        "price": 25580.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 74920,
+        "volume": 30004,
+        "basis": -127.0,
+        "ann": -0.058748
+      },
+      "main": {
+        "symbol": "zn2612",
+        "price": 25555.0,
+        "expiry": "2026-12-15",
+        "dte": 60,
+        "oi": 102887,
+        "volume": 41605,
+        "basis": -102.0,
+        "ann": -0.024378
+      },
+      "far": {
+        "symbol": "zn2701",
+        "price": 25570.0,
+        "expiry": "2027-01-15",
+        "dte": 91,
+        "oi": 33017,
+        "volume": 5973,
+        "basis": -117.0,
+        "ann": -0.018437
+      },
+      "curve": [
+        {
+          "symbol": "zn2611",
+          "price": 25580.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 74920,
+          "volume": 30004,
+          "basis": -127.0,
+          "ann": -0.058748,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "zn2612",
+          "price": 25555.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 102887,
+          "volume": 41605,
+          "basis": -102.0,
+          "ann": -0.024378,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "zn2701",
+          "price": 25570.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 33017,
+          "volume": 5973,
+          "basis": -117.0,
+          "ann": -0.018437,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "zn2702",
+          "price": 25525.0,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 6964,
+          "volume": 1081,
+          "basis": -72.0,
+          "ann": -0.008463,
+          "roles": []
+        },
+        {
+          "symbol": "zn2703",
+          "price": 25525.0,
+          "expiry": "2027-03-15",
+          "dte": 150,
+          "oi": 1633,
+          "volume": 184,
+          "basis": -72.0,
+          "ann": -0.006883,
+          "roles": []
+        },
+        {
+          "symbol": "zn2704",
+          "price": 25505.0,
+          "expiry": "2027-04-15",
+          "dte": 181,
+          "oi": 1155,
+          "volume": 71,
+          "basis": -52.0,
+          "ann": -0.00412,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "ni",
+      "name": "沪镍",
+      "ppi_name": "镍",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "有色贵金属",
+      "spot_available": true,
+      "spot_price": 117383.33,
+      "spot_unit": "元/吨",
+      "basis_price": 117383.33,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "ni2611",
+        "price": 116190.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 120777,
+        "volume": 70791,
+        "basis": 1193.33,
+        "ann": 0.119698
+      },
+      "main": {
+        "symbol": "ni2612",
+        "price": 116360.0,
+        "expiry": "2026-12-15",
+        "dte": 60,
+        "oi": 154187,
+        "volume": 40364,
+        "basis": 1023.33,
+        "ann": 0.053034
+      },
+      "far": {
+        "symbol": "ni2701",
+        "price": 116600.0,
+        "expiry": "2027-01-15",
+        "dte": 91,
+        "oi": 65851,
+        "volume": 9561,
+        "basis": 783.33,
+        "ann": 0.026766
+      },
+      "curve": [
+        {
+          "symbol": "ni2611",
+          "price": 116190.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 120777,
+          "volume": 70791,
+          "basis": 1193.33,
+          "ann": 0.119698,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "ni2612",
+          "price": 116360.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 154187,
+          "volume": 40364,
+          "basis": 1023.33,
+          "ann": 0.053034,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "ni2701",
+          "price": 116600.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 65851,
+          "volume": 9561,
+          "basis": 783.33,
+          "ann": 0.026766,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "ni2702",
+          "price": 116810.0,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 12779,
+          "volume": 2509,
+          "basis": 573.33,
+          "ann": 0.014613,
+          "roles": []
+        },
+        {
+          "symbol": "ni2703",
+          "price": 117040.0,
+          "expiry": "2027-03-15",
+          "dte": 150,
+          "oi": 5253,
+          "volume": 746,
+          "basis": 343.33,
+          "ann": 0.007117,
+          "roles": []
+        },
+        {
+          "symbol": "ni2705",
+          "price": 117530.0,
+          "expiry": "2027-05-17",
+          "dte": 213,
+          "oi": 7855,
+          "volume": 635,
+          "basis": -146.67,
+          "ann": -0.002141,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "au",
+      "name": "沪金",
+      "ppi_name": "黄金",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "有色贵金属",
+      "spot_available": true,
+      "spot_price": 893.97,
+      "spot_unit": "元/克",
+      "basis_price": 893.97,
+      "basis_unit": "元/克",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "au2611",
+        "price": 897.74,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 7329,
+        "volume": 2037,
+        "basis": -3.77,
+        "ann": -0.049653
+      },
+      "main": {
+        "symbol": "au2612",
+        "price": 898.6,
+        "expiry": "2026-12-15",
+        "dte": 60,
+        "oi": 224110,
+        "volume": 137781,
+        "basis": -4.63,
+        "ann": -0.031506
+      },
+      "far": {
+        "symbol": "au2702",
+        "price": 901.08,
+        "expiry": "2027-02-15",
+        "dte": 122,
+        "oi": 95768,
+        "volume": 19003,
+        "basis": -7.11,
+        "ann": -0.023795
+      },
+      "curve": [
+        {
+          "symbol": "au2611",
+          "price": 897.74,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 7329,
+          "volume": 2037,
+          "basis": -3.77,
+          "ann": -0.049653,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "au2612",
+          "price": 898.6,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 224110,
+          "volume": 137781,
+          "basis": -4.63,
+          "ann": -0.031506,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "au2702",
+          "price": 901.08,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 95768,
+          "volume": 19003,
+          "basis": -7.11,
+          "ann": -0.023795,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "au2704",
+          "price": 903.08,
+          "expiry": "2027-04-15",
+          "dte": 181,
+          "oi": 34291,
+          "volume": 2551,
+          "basis": -9.11,
+          "ann": -0.02055,
+          "roles": []
+        },
+        {
+          "symbol": "au2706",
+          "price": 905.42,
+          "expiry": "2027-06-15",
+          "dte": 242,
+          "oi": 10011,
+          "volume": 305,
+          "basis": -11.45,
+          "ann": -0.019318,
+          "roles": []
+        },
+        {
+          "symbol": "au2708",
+          "price": 907.28,
+          "expiry": "2027-08-16",
+          "dte": 304,
+          "oi": 12407,
+          "volume": 293,
+          "basis": -13.31,
+          "ann": -0.017876,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "ag",
+      "name": "沪银",
+      "ppi_name": "白银",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "有色贵金属",
+      "spot_available": true,
+      "spot_price": 13607.0,
+      "spot_unit": "元/千克",
+      "basis_price": 13607.0,
+      "basis_unit": "元/千克",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "ag2611",
+        "price": 13819.0,
+        "expiry": "2026-11-16",
+        "dte": 31,
+        "oi": 26363,
+        "volume": 10188,
+        "basis": -212.0,
+        "ann": -0.183444
+      },
+      "main": {
+        "symbol": "ag2612",
+        "price": 13835.0,
+        "expiry": "2026-12-15",
+        "dte": 60,
+        "oi": 284418,
+        "volume": 208788,
+        "basis": -228.0,
+        "ann": -0.101933
+      },
+      "far": {
+        "symbol": "ag2702",
+        "price": 13871.0,
+        "expiry": "2027-02-15",
+        "dte": 122,
+        "oi": 161976,
+        "volume": 127473,
+        "basis": -264.0,
+        "ann": -0.058046
+      },
+      "curve": [
+        {
+          "symbol": "ag2611",
+          "price": 13819.0,
+          "expiry": "2026-11-16",
+          "dte": 31,
+          "oi": 26363,
+          "volume": 10188,
+          "basis": -212.0,
+          "ann": -0.183444,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "ag2612",
+          "price": 13835.0,
+          "expiry": "2026-12-15",
+          "dte": 60,
+          "oi": 284418,
+          "volume": 208788,
+          "basis": -228.0,
+          "ann": -0.101933,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "ag2701",
+          "price": 13855.0,
+          "expiry": "2027-01-15",
+          "dte": 91,
+          "oi": 19911,
+          "volume": 14122,
+          "basis": -248.0,
+          "ann": -0.073104,
+          "roles": []
+        },
+        {
+          "symbol": "ag2702",
+          "price": 13871.0,
+          "expiry": "2027-02-15",
+          "dte": 122,
+          "oi": 161976,
+          "volume": 127473,
+          "basis": -264.0,
+          "ann": -0.058046,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "ag2704",
+          "price": 13900.0,
+          "expiry": "2027-04-15",
+          "dte": 181,
+          "oi": 37142,
+          "volume": 8215,
+          "basis": -293.0,
+          "ann": -0.043423,
+          "roles": []
+        },
+        {
+          "symbol": "ag2705",
+          "price": 13927.0,
+          "expiry": "2027-05-17",
+          "dte": 213,
+          "oi": 9834,
+          "volume": 1617,
+          "basis": -320.0,
+          "ann": -0.0403,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "sc",
+      "name": "原油",
+      "ppi_name": null,
+      "exchange": "INE",
+      "exchange_name": "能源中心",
+      "sector": "能源",
+      "spot_available": false,
+      "spot_price": null,
+      "spot_unit": "元/吨",
+      "basis_price": null,
+      "basis_unit": "元/吨",
+      "quality": "unavailable",
+      "conversion": null,
+      "note": "生意社现期表没有原油行。能源中心原油是元/桶，表上也没有对应的人民币现货列。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "sc2611",
+        "price": 739.0,
+        "expiry": "2026-10-30",
+        "dte": 14,
+        "oi": 5926,
+        "volume": 10073,
+        "basis": null,
+        "ann": null
+      },
+      "main": {
+        "symbol": "sc2612",
+        "price": 739.8,
+        "expiry": "2026-11-30",
+        "dte": 45,
+        "oi": 33728,
+        "volume": 114030,
+        "basis": null,
+        "ann": null
+      },
+      "far": {
+        "symbol": "sc2701",
+        "price": 729.1,
+        "expiry": "2026-12-31",
+        "dte": 76,
+        "oi": 13583,
+        "volume": 10882,
+        "basis": null,
+        "ann": null
+      },
+      "curve": [
+        {
+          "symbol": "sc2611",
+          "price": 739.0,
+          "expiry": "2026-10-30",
+          "dte": 14,
+          "oi": 5926,
+          "volume": 10073,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "sc2612",
+          "price": 739.8,
+          "expiry": "2026-11-30",
+          "dte": 45,
+          "oi": 33728,
+          "volume": 114030,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "sc2701",
+          "price": 729.1,
+          "expiry": "2026-12-31",
+          "dte": 76,
+          "oi": 13583,
+          "volume": 10882,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "sc2702",
+          "price": 719.3,
+          "expiry": "2027-01-29",
+          "dte": 105,
+          "oi": 4421,
+          "volume": 2108,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "sc2703",
+          "price": 706.6,
+          "expiry": "2027-02-26",
+          "dte": 133,
+          "oi": 2582,
+          "volume": 1395,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "sc2704",
+          "price": 692.8,
+          "expiry": "2027-03-31",
+          "dte": 166,
+          "oi": 636,
+          "volume": 78,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "fu",
+      "name": "燃料油",
+      "ppi_name": "燃料油",
+      "exchange": "SHFE",
+      "exchange_name": "上期所",
+      "sector": "能源",
+      "spot_available": true,
+      "spot_price": 7612.5,
+      "spot_unit": "元/吨",
+      "basis_price": 7612.5,
+      "basis_unit": "元/吨",
+      "quality": "spec_mismatch",
+      "conversion": null,
+      "note": "现货规格为 180CST，期货为 RMG 380 船用燃料油。单位都是元/吨，规格不同。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "fu2611",
+        "price": 5699.0,
+        "expiry": "2026-10-30",
+        "dte": 14,
+        "oi": 106982,
+        "volume": 229574,
+        "basis": 1913.5,
+        "ann": 6.55339
+      },
+      "main": {
+        "symbol": "fu2701",
+        "price": 4947.0,
+        "expiry": "2026-12-31",
+        "dte": 76,
+        "oi": 234776,
+        "volume": 184028,
+        "basis": 2665.5,
+        "ann": 1.681631
+      },
+      "far": {
+        "symbol": "fu2702",
+        "price": 4723.0,
+        "expiry": "2027-01-29",
+        "dte": 105,
+        "oi": 74751,
+        "volume": 20099,
+        "basis": 2889.5,
+        "ann": 1.319468
+      },
+      "curve": [
+        {
+          "symbol": "fu2611",
+          "price": 5699.0,
+          "expiry": "2026-10-30",
+          "dte": 14,
+          "oi": 106982,
+          "volume": 229574,
+          "basis": 1913.5,
+          "ann": 6.55339,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "fu2612",
+          "price": 5234.0,
+          "expiry": "2026-11-30",
+          "dte": 45,
+          "oi": 56878,
+          "volume": 55676,
+          "basis": 2378.5,
+          "ann": 2.534289,
+          "roles": []
+        },
+        {
+          "symbol": "fu2701",
+          "price": 4947.0,
+          "expiry": "2026-12-31",
+          "dte": 76,
+          "oi": 234776,
+          "volume": 184028,
+          "basis": 2665.5,
+          "ann": 1.681631,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "fu2702",
+          "price": 4723.0,
+          "expiry": "2027-01-29",
+          "dte": 105,
+          "oi": 74751,
+          "volume": 20099,
+          "basis": 2889.5,
+          "ann": 1.319468,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "fu2703",
+          "price": 4513.0,
+          "expiry": "2027-02-26",
+          "dte": 133,
+          "oi": 39147,
+          "volume": 10227,
+          "basis": 3099.5,
+          "ann": 1.117392,
+          "roles": []
+        },
+        {
+          "symbol": "fu2704",
+          "price": 4332.0,
+          "expiry": "2027-03-31",
+          "dte": 166,
+          "oi": 28333,
+          "volume": 2874,
+          "basis": 3280.5,
+          "ann": 0.94754,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "lu",
+      "name": "低硫燃料油",
+      "ppi_name": null,
+      "exchange": "INE",
+      "exchange_name": "能源中心",
+      "sector": "能源",
+      "spot_available": false,
+      "spot_price": null,
+      "spot_unit": "元/吨",
+      "basis_price": null,
+      "basis_unit": "元/吨",
+      "quality": "unavailable",
+      "conversion": null,
+      "note": "生意社现期表没有低硫燃料油行。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "lu2611",
+        "price": 6241.0,
+        "expiry": "2026-10-30",
+        "dte": 14,
+        "oi": 6875,
+        "volume": 1905,
+        "basis": null,
+        "ann": null
+      },
+      "main": {
+        "symbol": "lu2612",
+        "price": 5952.0,
+        "expiry": "2026-11-30",
+        "dte": 45,
+        "oi": 74147,
+        "volume": 54929,
+        "basis": null,
+        "ann": null
+      },
+      "far": {
+        "symbol": "lu2701",
+        "price": 5723.0,
+        "expiry": "2026-12-31",
+        "dte": 76,
+        "oi": 54357,
+        "volume": 16618,
+        "basis": null,
+        "ann": null
+      },
+      "curve": [
+        {
+          "symbol": "lu2611",
+          "price": 6241.0,
+          "expiry": "2026-10-30",
+          "dte": 14,
+          "oi": 6875,
+          "volume": 1905,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "lu2612",
+          "price": 5952.0,
+          "expiry": "2026-11-30",
+          "dte": 45,
+          "oi": 74147,
+          "volume": 54929,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "lu2701",
+          "price": 5723.0,
+          "expiry": "2026-12-31",
+          "dte": 76,
+          "oi": 54357,
+          "volume": 16618,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "lu2702",
+          "price": 5500.0,
+          "expiry": "2027-01-29",
+          "dte": 105,
+          "oi": 2954,
+          "volume": 2459,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "lu2703",
+          "price": 5301.0,
+          "expiry": "2027-02-26",
+          "dte": 133,
+          "oi": 787,
+          "volume": 46,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "lu2704",
+          "price": 5205.0,
+          "expiry": "2027-03-31",
+          "dte": 166,
+          "oi": 125,
+          "volume": 3,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "TA",
+      "name": "PTA",
+      "ppi_name": "PTA",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 7231.0,
+      "spot_unit": "元/吨",
+      "basis_price": 7231.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "TA2611",
+        "price": 6704.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 156485,
+        "volume": 20654,
+        "basis": 527.0,
+        "ann": 0.950051
+      },
+      "main": {
+        "symbol": "TA2701",
+        "price": 6500.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 1114015,
+        "volume": 289145,
+        "basis": 731.0,
+        "ann": 0.409986
+      },
+      "far": {
+        "symbol": "TA2703",
+        "price": 6336.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 267432,
+        "volume": 14866,
+        "basis": 895.0,
+        "ann": 0.307327
+      },
+      "curve": [
+        {
+          "symbol": "TA2611",
+          "price": 6704.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 156485,
+          "volume": 20654,
+          "basis": 527.0,
+          "ann": 0.950051,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "TA2612",
+          "price": 6628.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 221749,
+          "volume": 31484,
+          "basis": 603.0,
+          "ann": 0.515893,
+          "roles": []
+        },
+        {
+          "symbol": "TA2701",
+          "price": 6500.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 1114015,
+          "volume": 289145,
+          "basis": 731.0,
+          "ann": 0.409986,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "TA2702",
+          "price": 6402.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 118041,
+          "volume": 12972,
+          "basis": 829.0,
+          "ann": 0.351643,
+          "roles": []
+        },
+        {
+          "symbol": "TA2703",
+          "price": 6336.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 267432,
+          "volume": 14866,
+          "basis": 895.0,
+          "ann": 0.307327,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "TA2705",
+          "price": 6238.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 116681,
+          "volume": 5936,
+          "basis": 993.0,
+          "ann": 0.238685,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "MA",
+      "name": "甲醇",
+      "ppi_name": "甲醇MA",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 3966.67,
+      "spot_unit": "元/吨",
+      "basis_price": 3966.67,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "MA2611",
+        "price": 3382.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 210620,
+        "volume": 247060,
+        "basis": 584.67,
+        "ann": 1.921408
+      },
+      "main": {
+        "symbol": "MA2701",
+        "price": 3207.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 835314,
+        "volume": 570179,
+        "basis": 759.67,
+        "ann": 0.776693
+      },
+      "far": {
+        "symbol": "MA2703",
+        "price": 3086.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 219035,
+        "volume": 29359,
+        "basis": 880.67,
+        "ann": 0.551268
+      },
+      "curve": [
+        {
+          "symbol": "MA2611",
+          "price": 3382.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 210620,
+          "volume": 247060,
+          "basis": 584.67,
+          "ann": 1.921408,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "MA2612",
+          "price": 3277.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 277665,
+          "volume": 101186,
+          "basis": 689.67,
+          "ann": 1.075613,
+          "roles": []
+        },
+        {
+          "symbol": "MA2701",
+          "price": 3207.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 835314,
+          "volume": 570179,
+          "basis": 759.67,
+          "ann": 0.776693,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "MA2702",
+          "price": 3141.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 128669,
+          "volume": 28562,
+          "basis": 825.67,
+          "ann": 0.638449,
+          "roles": []
+        },
+        {
+          "symbol": "MA2703",
+          "price": 3086.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 219035,
+          "volume": 29359,
+          "basis": 880.67,
+          "ann": 0.551268,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "MA2705",
+          "price": 2977.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 138069,
+          "volume": 12304,
+          "basis": 989.67,
+          "ann": 0.433649,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "SA",
+      "name": "纯碱",
+      "ppi_name": "纯碱",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 1062.86,
+      "spot_unit": "元/吨",
+      "basis_price": 1062.86,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "SA2611",
+        "price": 929.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 41562,
+        "volume": 9616,
+        "basis": 133.86,
+        "ann": 1.64176
+      },
+      "main": {
+        "symbol": "SA2701",
+        "price": 956.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 1345232,
+        "volume": 580467,
+        "basis": 106.86,
+        "ann": 0.407746
+      },
+      "far": {
+        "symbol": "SA2703",
+        "price": 991.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 263587,
+        "volume": 117291,
+        "basis": 71.86,
+        "ann": 0.167875
+      },
+      "curve": [
+        {
+          "symbol": "SA2611",
+          "price": 929.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 41562,
+          "volume": 9616,
+          "basis": 133.86,
+          "ann": 1.64176,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "SA2612",
+          "price": 954.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 131925,
+          "volume": 51099,
+          "basis": 108.86,
+          "ann": 0.633626,
+          "roles": []
+        },
+        {
+          "symbol": "SA2701",
+          "price": 956.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 1345232,
+          "volume": 580467,
+          "basis": 106.86,
+          "ann": 0.407746,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "SA2702",
+          "price": 992.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 135097,
+          "volume": 50928,
+          "basis": 70.86,
+          "ann": 0.204489,
+          "roles": []
+        },
+        {
+          "symbol": "SA2703",
+          "price": 991.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 263587,
+          "volume": 117291,
+          "basis": 71.86,
+          "ann": 0.167875,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "SA2705",
+          "price": 1020.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 152780,
+          "volume": 35191,
+          "basis": 42.86,
+          "ann": 0.070089,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "FG",
+      "name": "玻璃",
+      "ppi_name": "玻璃",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 11.95,
+      "spot_unit": "元/平方米",
+      "basis_price": 956.0,
+      "basis_unit": "元/吨",
+      "quality": "converted",
+      "conversion": "5mm 浮法玻璃 12.5 kg/㎡，80 ㎡/吨，现货×80 得到元/吨",
+      "note": "现货报价是元/平方米。基差先按 5mm、12.5 kg/㎡ 折成元/吨，再减期货。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "FG2611",
+        "price": 878.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 47074,
+        "volume": 4934,
+        "basis": 78.0,
+        "ann": 1.063583
+      },
+      "main": {
+        "symbol": "FG2701",
+        "price": 865.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 1488516,
+        "volume": 448259,
+        "basis": 91.0,
+        "ann": 0.386041
+      },
+      "far": {
+        "symbol": "FG2703",
+        "price": 880.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 223079,
+        "volume": 21058,
+        "basis": 76.0,
+        "ann": 0.197393
+      },
+      "curve": [
+        {
+          "symbol": "FG2611",
+          "price": 878.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 47074,
+          "volume": 4934,
+          "basis": 78.0,
+          "ann": 1.063583,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "FG2612",
+          "price": 881.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 140691,
+          "volume": 51437,
+          "basis": 75.0,
+          "ann": 0.485338,
+          "roles": []
+        },
+        {
+          "symbol": "FG2701",
+          "price": 865.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 1488516,
+          "volume": 448259,
+          "basis": 91.0,
+          "ann": 0.386041,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "FG2702",
+          "price": 896.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 110085,
+          "volume": 15072,
+          "basis": 60.0,
+          "ann": 0.192504,
+          "roles": []
+        },
+        {
+          "symbol": "FG2703",
+          "price": 880.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 223079,
+          "volume": 21058,
+          "basis": 76.0,
+          "ann": 0.197393,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "FG2705",
+          "price": 921.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 96634,
+          "volume": 9007,
+          "basis": 35.0,
+          "ann": 0.063633,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "UR",
+      "name": "尿素",
+      "ppi_name": "尿素",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 1727.5,
+      "spot_unit": "元/吨",
+      "basis_price": 1727.5,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "UR2611",
+        "price": 1658.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 16722,
+        "volume": 11956,
+        "basis": 69.5,
+        "ann": 0.524447
+      },
+      "main": {
+        "symbol": "UR2701",
+        "price": 1676.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 326266,
+        "volume": 175747,
+        "basis": 51.5,
+        "ann": 0.120904
+      },
+      "far": {
+        "symbol": "UR2703",
+        "price": 1739.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 67983,
+        "volume": 18178,
+        "basis": -11.5,
+        "ann": -0.016529
+      },
+      "curve": [
+        {
+          "symbol": "UR2611",
+          "price": 1658.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 16722,
+          "volume": 11956,
+          "basis": 69.5,
+          "ann": 0.524447,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "UR2612",
+          "price": 1670.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 39438,
+          "volume": 16220,
+          "basis": 57.5,
+          "ann": 0.205916,
+          "roles": []
+        },
+        {
+          "symbol": "UR2701",
+          "price": 1676.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 326266,
+          "volume": 175747,
+          "basis": 51.5,
+          "ann": 0.120904,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "UR2702",
+          "price": 1680.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 33146,
+          "volume": 12158,
+          "basis": 47.5,
+          "ann": 0.084338,
+          "roles": []
+        },
+        {
+          "symbol": "UR2703",
+          "price": 1739.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 67983,
+          "volume": 18178,
+          "basis": -11.5,
+          "ann": -0.016529,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "UR2705",
+          "price": 1744.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 40022,
+          "volume": 20731,
+          "basis": -16.5,
+          "ann": -0.016601,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "eg",
+      "name": "乙二醇",
+      "ppi_name": "乙二醇",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 5966.67,
+      "spot_unit": "元/吨",
+      "basis_price": 5966.67,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "eg2611",
+        "price": 5152.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 233287,
+        "volume": 290709,
+        "basis": 814.67,
+        "ann": 1.779855
+      },
+      "main": {
+        "symbol": "eg2611",
+        "price": 5152.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 233287,
+        "volume": 290709,
+        "basis": 814.67,
+        "ann": 1.779855
+      },
+      "far": {
+        "symbol": "eg2701",
+        "price": 4865.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 204364,
+        "volume": 95114,
+        "basis": 1101.67,
+        "ann": 0.748807
+      },
+      "curve": [
+        {
+          "symbol": "eg2611",
+          "price": 5152.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 233287,
+          "volume": 290709,
+          "basis": 814.67,
+          "ann": 1.779855,
+          "roles": [
+            "near",
+            "main"
+          ]
+        },
+        {
+          "symbol": "eg2612",
+          "price": 5001.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 113075,
+          "volume": 24790,
+          "basis": 965.67,
+          "ann": 1.001239,
+          "roles": []
+        },
+        {
+          "symbol": "eg2701",
+          "price": 4865.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 204364,
+          "volume": 95114,
+          "basis": 1101.67,
+          "ann": 0.748807,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "eg2702",
+          "price": 4767.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 46247,
+          "volume": 1088,
+          "basis": 1199.67,
+          "ann": 0.616702,
+          "roles": []
+        },
+        {
+          "symbol": "eg2703",
+          "price": 4699.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 10427,
+          "volume": 602,
+          "basis": 1267.67,
+          "ann": 0.527533,
+          "roles": []
+        },
+        {
+          "symbol": "eg2705",
+          "price": 4717.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 25084,
+          "volume": 1271,
+          "basis": 1249.67,
+          "ann": 0.36403,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "l",
+      "name": "塑料",
+      "ppi_name": "聚乙烯",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 9825.0,
+      "spot_unit": "元/吨",
+      "basis_price": 9825.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": "生意社品名是聚乙烯，对应大商所塑料（LLDPE）。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "l2611",
+        "price": 9298.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 91588,
+        "volume": 6009,
+        "basis": 527.0,
+        "ann": 0.699218
+      },
+      "main": {
+        "symbol": "l2701",
+        "price": 8713.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 455737,
+        "volume": 200576,
+        "basis": 1112.0,
+        "ann": 0.45901
+      },
+      "far": {
+        "symbol": "l2702",
+        "price": 8524.0,
+        "expiry": "2027-02-12",
+        "dte": 119,
+        "oi": 63168,
+        "volume": 693,
+        "basis": 1301.0,
+        "ann": 0.406154
+      },
+      "curve": [
+        {
+          "symbol": "l2611",
+          "price": 9298.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 91588,
+          "volume": 6009,
+          "basis": 527.0,
+          "ann": 0.699218,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "l2612",
+          "price": 8930.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 119674,
+          "volume": 5230,
+          "basis": 895.0,
+          "ann": 0.563549,
+          "roles": []
+        },
+        {
+          "symbol": "l2701",
+          "price": 8713.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 455737,
+          "volume": 200576,
+          "basis": 1112.0,
+          "ann": 0.45901,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "l2702",
+          "price": 8524.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 63168,
+          "volume": 693,
+          "basis": 1301.0,
+          "ann": 0.406154,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "l2703",
+          "price": 8384.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 12271,
+          "volume": 299,
+          "basis": 1441.0,
+          "ann": 0.364172,
+          "roles": []
+        },
+        {
+          "symbol": "l2705",
+          "price": 8295.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 41448,
+          "volume": 3524,
+          "basis": 1530.0,
+          "ann": 0.270665,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "v",
+      "name": "PVC",
+      "ppi_name": "聚氯乙烯",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 4800.0,
+      "spot_unit": "元/吨",
+      "basis_price": 4800.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "v2611",
+        "price": 4822.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 159056,
+        "volume": 9640,
+        "basis": -22.0,
+        "ann": -0.059747
+      },
+      "main": {
+        "symbol": "v2701",
+        "price": 4903.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 1086243,
+        "volume": 512176,
+        "basis": -103.0,
+        "ann": -0.087025
+      },
+      "far": {
+        "symbol": "v2705",
+        "price": 5144.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 195649,
+        "volume": 19026,
+        "basis": -344.0,
+        "ann": -0.124563
+      },
+      "curve": [
+        {
+          "symbol": "v2611",
+          "price": 4822.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 159056,
+          "volume": 9640,
+          "basis": -22.0,
+          "ann": -0.059747,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "v2612",
+          "price": 4863.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 155472,
+          "volume": 3696,
+          "basis": -63.0,
+          "ann": -0.081197,
+          "roles": []
+        },
+        {
+          "symbol": "v2701",
+          "price": 4903.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 1086243,
+          "volume": 512176,
+          "basis": -103.0,
+          "ann": -0.087025,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "v2702",
+          "price": 4942.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 117592,
+          "volume": 2098,
+          "basis": -142.0,
+          "ann": -0.090739,
+          "roles": []
+        },
+        {
+          "symbol": "v2703",
+          "price": 4974.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 39702,
+          "volume": 924,
+          "basis": -174.0,
+          "ann": -0.090009,
+          "roles": []
+        },
+        {
+          "symbol": "v2705",
+          "price": 5144.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 195649,
+          "volume": 19026,
+          "basis": -344.0,
+          "ann": -0.124563,
+          "roles": [
+            "far"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "pp",
+      "name": "聚丙烯",
+      "ppi_name": "聚丙烯",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "化工",
+      "spot_available": true,
+      "spot_price": 10750.0,
+      "spot_unit": "元/吨",
+      "basis_price": 10750.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "pp2611",
+        "price": 10196.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 115351,
+        "volume": 15491,
+        "basis": 554.0,
+        "ann": 0.671794
+      },
+      "main": {
+        "symbol": "pp2701",
+        "price": 9402.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 679699,
+        "volume": 271978,
+        "basis": 1348.0,
+        "ann": 0.508548
+      },
+      "far": {
+        "symbol": "pp2705",
+        "price": 8775.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 84168,
+        "volume": 10147,
+        "basis": 1975.0,
+        "ann": 0.319324
+      },
+      "curve": [
+        {
+          "symbol": "pp2611",
+          "price": 10196.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 115351,
+          "volume": 15491,
+          "basis": 554.0,
+          "ann": 0.671794,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "pp2612",
+          "price": 9766.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 132861,
+          "volume": 23478,
+          "basis": 984.0,
+          "ann": 0.566275,
+          "roles": []
+        },
+        {
+          "symbol": "pp2701",
+          "price": 9402.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 679699,
+          "volume": 271978,
+          "basis": 1348.0,
+          "ann": 0.508548,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "pp2702",
+          "price": 9092.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 55349,
+          "volume": 1793,
+          "basis": 1658.0,
+          "ann": 0.473066,
+          "roles": []
+        },
+        {
+          "symbol": "pp2703",
+          "price": 8910.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 14394,
+          "volume": 479,
+          "basis": 1840.0,
+          "ann": 0.424996,
+          "roles": []
+        },
+        {
+          "symbol": "pp2705",
+          "price": 8775.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 84168,
+          "volume": 10147,
+          "basis": 1975.0,
+          "ann": 0.319324,
+          "roles": [
+            "far"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "c",
+      "name": "玉米",
+      "ppi_name": "玉米",
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "农产品",
+      "spot_available": true,
+      "spot_price": 2167.14,
+      "spot_unit": "元/吨",
+      "basis_price": 2167.14,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "c2611",
+        "price": 2164.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 469052,
+        "volume": 83078,
+        "basis": 3.14,
+        "ann": 0.018888
+      },
+      "main": {
+        "symbol": "c2701",
+        "price": 2191.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 1106242,
+        "volume": 283113,
+        "basis": -23.86,
+        "ann": -0.044651
+      },
+      "far": {
+        "symbol": "c2703",
+        "price": 2220.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 427867,
+        "volume": 38559,
+        "basis": -52.86,
+        "ann": -0.060564
+      },
+      "curve": [
+        {
+          "symbol": "c2611",
+          "price": 2164.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 469052,
+          "volume": 83078,
+          "basis": 3.14,
+          "ann": 0.018888,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "c2701",
+          "price": 2191.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 1106242,
+          "volume": 283113,
+          "basis": -23.86,
+          "ann": -0.044651,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "c2703",
+          "price": 2220.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 427867,
+          "volume": 38559,
+          "basis": -52.86,
+          "ann": -0.060564,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "c2705",
+          "price": 2273.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 165322,
+          "volume": 10266,
+          "basis": -105.86,
+          "ann": -0.084902,
+          "roles": []
+        },
+        {
+          "symbol": "c2707",
+          "price": 2293.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 161648,
+          "volume": 3992,
+          "basis": -125.86,
+          "ann": -0.078221,
+          "roles": []
+        },
+        {
+          "symbol": "c2709",
+          "price": 2312.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 7469,
+          "volume": 699,
+          "basis": -144.86,
+          "ann": -0.073267,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "cs",
+      "name": "玉米淀粉",
+      "ppi_name": null,
+      "exchange": "DCE",
+      "exchange_name": "大商所",
+      "sector": "农产品",
+      "spot_available": false,
+      "spot_price": null,
+      "spot_unit": "元/吨",
+      "basis_price": null,
+      "basis_unit": "元/吨",
+      "quality": "unavailable",
+      "conversion": null,
+      "note": "生意社当日现期对比表没有玉米淀粉现货行。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "cs2611",
+        "price": 2406.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 205941,
+        "volume": 87626,
+        "basis": null,
+        "ann": null
+      },
+      "main": {
+        "symbol": "cs2611",
+        "price": 2406.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 205941,
+        "volume": 87626,
+        "basis": null,
+        "ann": null
+      },
+      "far": {
+        "symbol": "cs2701",
+        "price": 2445.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 169877,
+        "volume": 35916,
+        "basis": null,
+        "ann": null
+      },
+      "curve": [
+        {
+          "symbol": "cs2611",
+          "price": 2406.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 205941,
+          "volume": 87626,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "near",
+            "main"
+          ]
+        },
+        {
+          "symbol": "cs2701",
+          "price": 2445.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 169877,
+          "volume": 35916,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "cs2703",
+          "price": 2464.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 78823,
+          "volume": 6416,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "cs2705",
+          "price": 2566.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 8599,
+          "volume": 1267,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "cs2707",
+          "price": 2583.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 1205,
+          "volume": 58,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "cs2709",
+          "price": 2628.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 57,
+          "volume": 12,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "CF",
+      "name": "棉花",
+      "ppi_name": "棉花",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "农产品",
+      "spot_available": true,
+      "spot_price": 17459.17,
+      "spot_unit": "元/吨",
+      "basis_price": 17459.17,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "CF2611",
+        "price": 15565.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 76135,
+        "volume": 3096,
+        "basis": 1894.17,
+        "ann": 1.414263
+      },
+      "main": {
+        "symbol": "CF2701",
+        "price": 15785.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 608975,
+        "volume": 201341,
+        "basis": 1674.17,
+        "ann": 0.38889
+      },
+      "far": {
+        "symbol": "CF2705",
+        "price": 15570.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 141303,
+        "volume": 25870,
+        "basis": 1889.17,
+        "ann": 0.188071
+      },
+      "curve": [
+        {
+          "symbol": "CF2611",
+          "price": 15565.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 76135,
+          "volume": 3096,
+          "basis": 1894.17,
+          "ann": 1.414263,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "CF2701",
+          "price": 15785.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 608975,
+          "volume": 201341,
+          "basis": 1674.17,
+          "ann": 0.38889,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "CF2703",
+          "price": 15665.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 132682,
+          "volume": 31499,
+          "basis": 1794.17,
+          "ann": 0.255162,
+          "roles": []
+        },
+        {
+          "symbol": "CF2705",
+          "price": 15570.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 141303,
+          "volume": 25870,
+          "basis": 1889.17,
+          "ann": 0.188071,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "CF2707",
+          "price": 15565.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 948,
+          "volume": 500,
+          "basis": 1894.17,
+          "ann": 0.146123,
+          "roles": []
+        },
+        {
+          "symbol": "CF2709",
+          "price": 15615.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 1438,
+          "volume": 353,
+          "basis": 1844.17,
+          "ann": 0.115778,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "SR",
+      "name": "白糖",
+      "ppi_name": "白糖",
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "农产品",
+      "spot_available": true,
+      "spot_price": 5246.67,
+      "spot_unit": "元/吨",
+      "basis_price": 5246.67,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "SR2611",
+        "price": 5190.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 22591,
+        "volume": 4210,
+        "basis": 56.67,
+        "ann": 0.140801
+      },
+      "main": {
+        "symbol": "SR2701",
+        "price": 5397.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 530794,
+        "volume": 144404,
+        "basis": -150.33,
+        "ann": -0.116202
+      },
+      "far": {
+        "symbol": "SR2705",
+        "price": 5478.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 159382,
+        "volume": 22735,
+        "basis": -231.33,
+        "ann": -0.076634
+      },
+      "curve": [
+        {
+          "symbol": "SR2611",
+          "price": 5190.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 22591,
+          "volume": 4210,
+          "basis": 56.67,
+          "ann": 0.140801,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "SR2701",
+          "price": 5397.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 530794,
+          "volume": 144404,
+          "basis": -150.33,
+          "ann": -0.116202,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "SR2703",
+          "price": 5432.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 140615,
+          "volume": 30237,
+          "basis": -185.33,
+          "ann": -0.087708,
+          "roles": []
+        },
+        {
+          "symbol": "SR2705",
+          "price": 5478.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 159382,
+          "volume": 22735,
+          "basis": -231.33,
+          "ann": -0.076634,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "SR2707",
+          "price": 5517.0,
+          "expiry": "2027-07-14",
+          "dte": 271,
+          "oi": 14764,
+          "volume": 1659,
+          "basis": -270.33,
+          "ann": -0.069396,
+          "roles": []
+        },
+        {
+          "symbol": "SR2709",
+          "price": 5560.0,
+          "expiry": "2027-09-14",
+          "dte": 333,
+          "oi": 8202,
+          "volume": 1369,
+          "basis": -313.33,
+          "ann": -0.065459,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "AP",
+      "name": "苹果",
+      "ppi_name": null,
+      "exchange": "CZCE",
+      "exchange_name": "郑商所",
+      "sector": "农产品",
+      "spot_available": false,
+      "spot_price": null,
+      "spot_unit": "元/吨",
+      "basis_price": null,
+      "basis_unit": "元/吨",
+      "quality": "unavailable",
+      "conversion": null,
+      "note": "生意社当日现期对比表没有苹果现货行。",
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "AP2611",
+        "price": 7250.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 3523,
+        "volume": 1539,
+        "basis": null,
+        "ann": null
+      },
+      "main": {
+        "symbol": "AP2701",
+        "price": 5998.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 169448,
+        "volume": 246243,
+        "basis": null,
+        "ann": null
+      },
+      "far": {
+        "symbol": "AP2703",
+        "price": 5775.0,
+        "expiry": "2027-03-12",
+        "dte": 147,
+        "oi": 26649,
+        "volume": 14445,
+        "basis": null,
+        "ann": null
+      },
+      "curve": [
+        {
+          "symbol": "AP2611",
+          "price": 7250.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 3523,
+          "volume": 1539,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "AP2612",
+          "price": 6406.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 19386,
+          "volume": 8913,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "AP2701",
+          "price": 5998.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 169448,
+          "volume": 246243,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "AP2703",
+          "price": 5775.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 26649,
+          "volume": 14445,
+          "basis": null,
+          "ann": null,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "AP2704",
+          "price": 5765.0,
+          "expiry": "2027-04-14",
+          "dte": 180,
+          "oi": 485,
+          "volume": 443,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        },
+        {
+          "symbol": "AP2705",
+          "price": 5762.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 20685,
+          "volume": 16561,
+          "basis": null,
+          "ann": null,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "lc",
+      "name": "碳酸锂",
+      "ppi_name": "碳酸锂",
+      "exchange": "GFEX",
+      "exchange_name": "广期所",
+      "sector": "新能源",
+      "spot_available": true,
+      "spot_price": 101000.0,
+      "spot_unit": "元/吨",
+      "basis_price": 101000.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "lc2611",
+        "price": 97720.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 70454,
+        "volume": 28875,
+        "basis": 3280.0,
+        "ann": 0.423338
+      },
+      "main": {
+        "symbol": "lc2701",
+        "price": 96320.0,
+        "expiry": "2027-01-14",
+        "dte": 90,
+        "oi": 425349,
+        "volume": 358976,
+        "basis": 4680.0,
+        "ann": 0.187921
+      },
+      "far": {
+        "symbol": "lc2705",
+        "price": 94500.0,
+        "expiry": "2027-05-14",
+        "dte": 210,
+        "oi": 133359,
+        "volume": 54246,
+        "basis": 6500.0,
+        "ann": 0.111858
+      },
+      "curve": [
+        {
+          "symbol": "lc2611",
+          "price": 97720.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 70454,
+          "volume": 28875,
+          "basis": 3280.0,
+          "ann": 0.423338,
+          "roles": [
+            "near"
+          ]
+        },
+        {
+          "symbol": "lc2612",
+          "price": 97000.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 32999,
+          "volume": 10540,
+          "basis": 4000.0,
+          "ann": 0.245008,
+          "roles": []
+        },
+        {
+          "symbol": "lc2701",
+          "price": 96320.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 425349,
+          "volume": 358976,
+          "basis": 4680.0,
+          "ann": 0.187921,
+          "roles": [
+            "main"
+          ]
+        },
+        {
+          "symbol": "lc2704",
+          "price": 94920.0,
+          "expiry": "2027-04-14",
+          "dte": 180,
+          "oi": 13297,
+          "volume": 2408,
+          "basis": 6080.0,
+          "ann": 0.122068,
+          "roles": []
+        },
+        {
+          "symbol": "lc2705",
+          "price": 94500.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 133359,
+          "volume": 54246,
+          "basis": 6500.0,
+          "ann": 0.111858,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "lc2706",
+          "price": 94860.0,
+          "expiry": "2027-06-14",
+          "dte": 241,
+          "oi": 12886,
+          "volume": 1650,
+          "basis": 6140.0,
+          "ann": 0.092071,
+          "roles": []
+        }
+      ]
+    },
+    {
+      "code": "si",
+      "name": "工业硅",
+      "ppi_name": "工业硅",
+      "exchange": "GFEX",
+      "exchange_name": "广期所",
+      "sector": "新能源",
+      "spot_available": true,
+      "spot_price": 9580.0,
+      "spot_unit": "元/吨",
+      "basis_price": 9580.0,
+      "basis_unit": "元/吨",
+      "quality": "aligned",
+      "conversion": null,
+      "note": null,
+      "futures_date": "2026-10-16",
+      "near": {
+        "symbol": "si2611",
+        "price": 8720.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 144623,
+        "volume": 185332,
+        "basis": 860.0,
+        "ann": 1.170221
+      },
+      "main": {
+        "symbol": "si2611",
+        "price": 8720.0,
+        "expiry": "2026-11-13",
+        "dte": 28,
+        "oi": 144623,
+        "volume": 185332,
+        "basis": 860.0,
+        "ann": 1.170221
+      },
+      "far": {
+        "symbol": "si2612",
+        "price": 8925.0,
+        "expiry": "2026-12-14",
+        "dte": 59,
+        "oi": 167812,
+        "volume": 98862,
+        "basis": 655.0,
+        "ann": 0.422977
+      },
+      "curve": [
+        {
+          "symbol": "si2611",
+          "price": 8720.0,
+          "expiry": "2026-11-13",
+          "dte": 28,
+          "oi": 144623,
+          "volume": 185332,
+          "basis": 860.0,
+          "ann": 1.170221,
+          "roles": [
+            "near",
+            "main"
+          ]
+        },
+        {
+          "symbol": "si2612",
+          "price": 8925.0,
+          "expiry": "2026-12-14",
+          "dte": 59,
+          "oi": 167812,
+          "volume": 98862,
+          "basis": 655.0,
+          "ann": 0.422977,
+          "roles": [
+            "far"
+          ]
+        },
+        {
+          "symbol": "si2701",
+          "price": 8830.0,
+          "expiry": "2027-01-14",
+          "dte": 90,
+          "oi": 33913,
+          "volume": 26031,
+          "basis": 750.0,
+          "ann": 0.317502,
+          "roles": []
+        },
+        {
+          "symbol": "si2702",
+          "price": 8760.0,
+          "expiry": "2027-02-12",
+          "dte": 119,
+          "oi": 18036,
+          "volume": 6498,
+          "basis": 820.0,
+          "ann": 0.262539,
+          "roles": []
+        },
+        {
+          "symbol": "si2703",
+          "price": 8775.0,
+          "expiry": "2027-03-12",
+          "dte": 147,
+          "oi": 462,
+          "volume": 92,
+          "basis": 805.0,
+          "ann": 0.208644,
+          "roles": []
+        },
+        {
+          "symbol": "si2705",
+          "price": 8805.0,
+          "expiry": "2027-05-14",
+          "dte": 210,
+          "oi": 2965,
+          "volume": 319,
+          "basis": 775.0,
+          "ann": 0.140608,
+          "roles": []
+        }
+      ]
+    }
+  ]
+}

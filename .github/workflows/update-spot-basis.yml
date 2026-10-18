@@ -1,0 +1,52 @@
+name: Update spot basis
+
+on:
+  schedule:
+    # Weekdays at 16:00 Asia/Shanghai (08:00 UTC), same slot as the other
+    # basis jobs. 生意社 usually stamps the spot table at 16:30, so this run
+    # can still be holding the previous session's cash price. The page prints
+    # the spot date and the futures date separately.
+    - cron: "0 8 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Same repository-wide group as the CFFEX and commodity workflows.
+concurrency:
+  group: update-basis
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test spot-table parser
+        run: python3 spot-basis/scripts/test_ppi.py
+
+      - name: Fetch spot basis snapshot
+        run: python3 spot-basis/scripts/fetch_spot_basis.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add spot-basis/data/latest.json
+          if git diff --cached --quiet; then
+            echo "spot basis snapshot unchanged"
+          else
+            git commit -m "data: update commodity spot basis snapshot"
+            git pull --rebase origin main
+            git push
+          fi

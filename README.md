@@ -8,6 +8,8 @@
 
 A/H 双重上市溢价在同站子目录：https://heber.github.io/cffex-basis/ah-premium/
 
+现金现货对期货的期现基差（生意社现货，近月 / 主力 / 远月）在：https://heber.github.io/cffex-basis/spot-basis/
+
 静态站托管在 GitHub Pages。行情不由 Pages 上的常驻服务拉取，而是由 GitHub Action 运行 `scripts/fetch_basis.py`，把结果写入 `data/latest.json`。
 
 ## 为什么要矫正分红？
@@ -118,8 +120,10 @@ cffex-basis/
 ├── .github/workflows/update-basis.yml # 工作日 16:00 提交股指快照和库存
 ├── .github/workflows/update-commodity-basis.yml # 同一时刻提交商品快照，与上面串行
 ├── .github/workflows/update-ah-premium.yml # 同一时刻提交 AH 溢价，只写 ah-premium/data
+├── .github/workflows/update-spot-basis.yml # 同一时刻提交期现基差，共用 update-basis
 ├── commodity/                         # 商品贴水页，见 commodity/README.md
 ├── ah-premium/                        # AH 溢价页，见 ah-premium/README.md
+├── spot-basis/                        # 现金现货对期货，见 spot-basis/README.md
 ├── .nojekyll
 └── README.md
 ```
