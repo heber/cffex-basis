@@ -1,0 +1,56 @@
+name: Update options volume
+
+on:
+  schedule:
+    # Weekdays 21:30 UTC = 05:30 Asia/Shanghai the next morning.
+    # During US daylight time that is 17:30 America/New_York, about 90
+    # minutes after the 16:00 cash close. During standard time it is
+    # 16:30 America/New_York. Cboe delayed quotes lag about 15-20 minutes.
+    # GitHub may delay or skip a scheduled run. Use workflow_dispatch to
+    # backfill. Markets are closed on weekends, so this does not run Sat/Sun.
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Same repository-wide group as the CFFEX, commodity, AH, and spot jobs.
+# cancel-in-progress stays false so a queued run still finishes.
+# pull --rebase covers a commit that landed after this job checked out.
+concurrency:
+  group: update-basis
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test options volume parser
+        run: python3 options-volume/scripts/test_options_volume.py
+
+      - name: Fetch options volume snapshot
+        run: python3 options-volume/scripts/fetch_options_volume.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add options-volume/data/latest.json
+          if git diff --cached --quiet; then
+            echo "options volume snapshot unchanged"
+          else
+            git commit -m "data: update US options volume snapshot"
+            git pull --rebase origin main
+            git push
+          fi

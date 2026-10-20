@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美股期权成交量趋势</title>
+  <meta name="description" content="固定观察池的美股期权总成交量、看涨/看跌占比，以及 Cboe 30日隐含波动率 IV30。静态页读取 data/latest.json。不是 IVolatility IVX，也不是全市场前20。" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans SC"', "PingFang SC", "Microsoft YaHei", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+    .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    table { border-collapse: collapse; }
+    th, td { white-space: nowrap; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .overview thead th { position: sticky; top: 0; background: #0f172a; z-index: 10; }
+    .bar { display: flex; height: 0.45rem; width: 7.5rem; overflow: hidden; border-radius: 9999px; background: #1e293b; }
+    .bar > span:first-child { background: #059669; }
+    .bar > span:last-child { background: #dc2626; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-30 backdrop-blur">
+    <div class="max-w-6xl mx-auto px-4 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">美股期权成交量趋势</h1>
+          <p class="text-slate-400 text-sm mt-1">
+            固定观察池 · 当日期权成交量排序 · Cboe IV30
+            · <a class="underline hover:text-slate-200" href="../">股指贴水</a>
+            · <a class="underline hover:text-slate-200" href="../commodity/">商品贴水</a>
+            · <a class="underline hover:text-slate-200" href="../ah-premium/">AH溢价</a>
+            · <a class="underline hover:text-slate-200" href="../spot-basis/">期现基差</a>
+          </p>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:w-auto sm:max-w-xl sm:justify-end">
+          <div class="text-right leading-tight">
+            <div class="text-[11px] text-slate-500">行情截止（美东）</div>
+            <div id="ts" class="text-slate-100 num text-sm font-medium">—</div>
+          </div>
+          <span id="status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">加载中</span>
+          <a id="manualRefresh"
+             href="https://github.com/heber/cffex-basis/actions/workflows/update-options-volume.yml"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">手动刷新</a>
+          <span class="max-w-full text-[11px] leading-snug text-slate-500">需要写入权限，打开后点 Run workflow，分支选 main</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <section class="rounded-xl border border-amber-700/40 bg-amber-950/30 p-4 md:p-5">
+      <h2 class="text-amber-300 font-semibold mb-2">这张表在模仿什么，又不是什么</h2>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        栏目对应 Zen Research 日报里的「期权成交量趋势」：排名、代码、名称、期权总成交量、看涨占比、看跌占比、30日隐含波动率、波动率变化。
+        成交量是 Cboe 延迟分时里每分钟看涨与看跌合约量的合计，覆盖美东常规交易时段（分时从 09:31 到 15:59）。
+        <strong class="text-amber-200">IV30 是 Cboe 自己的 30 日隐含波动率</strong>，水平通常接近 IVolatility 的 IVX，但不是 IVX，变化也不是 IVX 变化。
+        名单是 2026-10-19 那篇日报里的 20 个标的，每天按<strong>这份名单里</strong>的成交量重排。
+        <span id="coverageNote">不是全市场前20。</span>
+      </p>
+      <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-400">
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span>看涨占比，或 IV30 下降</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600"></span>看跌占比，或 IV30 上升</span>
+        <span>绿色不代表买、红色不代表卖</span>
+      </div>
+    </section>
+
+    <section>
+      <div id="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/60">
+      <div class="table-wrap">
+        <table class="overview w-full text-sm">
+          <thead class="text-slate-400 text-xs uppercase tracking-wide">
+            <tr class="border-b border-slate-800">
+              <th class="px-3 py-2 text-right font-medium">排名</th>
+              <th class="px-3 py-2 text-left font-medium">代码</th>
+              <th class="px-3 py-2 text-left font-medium">名称</th>
+              <th class="px-3 py-2 text-right font-medium">期权总成交量</th>
+              <th class="px-3 py-2 text-right font-medium">看涨</th>
+              <th class="px-3 py-2 text-right font-medium">看跌</th>
+              <th class="px-3 py-2 text-left font-medium">占比</th>
+              <th class="px-3 py-2 text-right font-medium">IV30</th>
+              <th class="px-3 py-2 text-right font-medium">IV30变化</th>
+            </tr>
+          </thead>
+          <tbody id="overviewBody">
+            <tr><td colspan="9" class="px-3 py-8 text-center text-slate-500">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="missingNote" class="text-xs text-slate-500"></p>
+
+    <footer class="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400 space-y-3">
+      <h2 class="text-slate-200 font-semibold">口径与免责声明</h2>
+      <ul class="list-disc list-inside space-y-1.5 leading-relaxed">
+        <li><strong class="text-slate-300">期权总成交量</strong> = Cboe 延迟分时 <code class="text-slate-400">total_options_volume</code> 的合计。看涨、看跌用同一文件里的 <code class="text-slate-400">calls_volume</code> / <code class="text-slate-400">puts_volume</code>。分时是增量，不是累计线。同一时刻把期权链逐合约加总，和这个合计很接近。</li>
+        <li><strong class="text-slate-300">看涨 % / 看跌 %</strong> = 该侧成交量 / （看涨 + 看跌）。百分比保留两位，看跌用 100 减去看涨，所以两侧相加是 100。</li>
+        <li><strong class="text-slate-300">IV30</strong> = Cboe 延迟报价里的 <code class="text-slate-400">iv30</code>。<strong class="text-slate-300">IV30变化</strong> = 同一对象的 <code class="text-slate-400">iv30_change</code>（Cboe 公布的相对前收变化）。指数和部分 ETF 收盘后这个变化可能是 0，页面照实写 0，不另造一个变化。</li>
+        <li><strong class="text-slate-300">排名</strong>只在固定观察池里进行。观察池写在 <code class="text-slate-400">options-volume/scripts/universe.py</code>，来自 2026-10-19 Zen Research 日报的 20 个标的（SPY、QQQ、SPX、IWM 以及当日表上的大票）。</li>
+        <li><strong class="text-slate-300">更新</strong>：工作日 21:30 UTC（北京时间次日 05:30）的 Action 重写 <code class="text-slate-400">data/latest.json</code>。夏令时这是美东 17:30，冬令时是美东 16:30。页头「手动刷新」打开该工作流，需要仓库写入权限后再点 Run workflow。</li>
+      </ul>
+      <p class="text-amber-500/90 text-xs leading-relaxed border-t border-slate-800 pt-3">
+        免责声明：本页是 GitHub Pages 静态站，不运行行情服务器。数字以最近一次提交的快照为准。
+        仅供研究参考，不构成投资建议。行情来自 Cboe 网站使用的延迟公开接口，可能延迟、缺行，或与 IVolatility、OCC 官方日终成交不一致。
+        股指分红矫正贴水见 <a class="underline text-amber-200" href="../">股指贴水</a>，
+        商品贴水见 <a class="underline text-amber-200" href="../commodity/">商品贴水</a>，
+        AH 溢价见 <a class="underline text-amber-200" href="../ah-premium/">AH溢价</a>，
+        现金现货对期货见 <a class="underline text-amber-200" href="../spot-basis/">期现基差</a>。
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    function $(id) { return document.getElementById(id); }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    function fmtInt(value) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      return Number(value).toLocaleString("zh-CN");
+    }
+
+    function fmtPct(value) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      return Number(value).toFixed(2) + "%";
+    }
+
+    function fmtIv(value) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      return Number(value).toFixed(2);
+    }
+
+    function fmtChange(value) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      const n = Number(value);
+      const text = n.toFixed(2);
+      return n > 0 ? "+" + text : text;
+    }
+
+    function changeClass(value) {
+      if (value == null || Number(value) === 0 || Number.isNaN(Number(value))) return "text-slate-300";
+      return Number(value) < 0 ? "text-emerald-400" : "text-red-400";
+    }
+
+    function sideClass(pct, other) {
+      if (pct == null || other == null) return "text-slate-300";
+      if (pct > other) return "text-emerald-400";
+      if (pct < other) return "text-slate-300";
+      return "text-slate-300";
+    }
+
+    function putClass(pct, other) {
+      if (pct == null || other == null) return "text-slate-300";
+      if (pct > other) return "text-red-400";
+      return "text-slate-300";
+    }
+
+    function clock(naive) {
+      if (!naive) return "—";
+      const parts = String(naive).split("T");
+      if (parts.length < 2) return esc(naive);
+      return parts[0] + " " + parts[1].slice(0, 5);
+    }
+
+    function card(label, main, sub) {
+      return (
+        '<div class="rounded-xl border border-slate-800 bg-slate-900 p-3">' +
+          '<div class="text-[11px] text-slate-500">' + esc(label) + '</div>' +
+          '<div class="mt-1 text-lg font-semibold num">' + main + '</div>' +
+          '<div class="text-xs text-slate-400 mt-0.5">' + sub + '</div>' +
+        '</div>'
+      );
+    }
+
+    function render(snap) {
+      const rows = snap.rows || [];
+      $("ts").textContent = clock(snap.session_end || snap.timestamp);
+      $("status").textContent = (snap.session_date || "无日期") + " · " + rows.length + " 个";
+      if (snap.coverage_note) $("coverageNote").textContent = snap.coverage_note;
+
+      if (!rows.length) {
+        $("summary").innerHTML = "";
+        $("overviewBody").innerHTML = '<tr><td colspan="9" class="px-3 py-8 text-center text-slate-500">快照里没有可排的标的</td></tr>';
+        return;
+      }
+
+      const top = rows[0];
+      const callLeader = rows.reduce((a, b) => (b.call_pct > a.call_pct ? b : a), rows[0]);
+      const ivLeader = rows.reduce((a, b) => ((b.iv30 || 0) > (a.iv30 || 0) ? b : a), rows[0]);
+      const dropLeader = rows.reduce((a, b) => {
+        if (a.iv30_change == null) return b;
+        if (b.iv30_change == null) return a;
+        return b.iv30_change < a.iv30_change ? b : a;
+      }, rows[0]);
+      const total = rows.reduce((sum, row) => sum + Number(row.total_volume || 0), 0);
+
+      $("summary").innerHTML = [
+        card("成交量最高", esc(top.symbol), fmtInt(top.total_volume) + " 张"),
+        card("观察池合计", fmtInt(total), rows.length + " 个标的"),
+        card("看涨占比最高", esc(callLeader.symbol), fmtPct(callLeader.call_pct)),
+        card("IV30 最高", esc(ivLeader.symbol), fmtIv(ivLeader.iv30) + " · 降幅最大 " + esc(dropLeader.symbol) + " " + fmtChange(dropLeader.iv30_change)),
+      ].join("");
+
+      $("overviewBody").innerHTML = rows.map((row) => {
+        const call = Number(row.call_pct);
+        const put = Number(row.put_pct);
+        const widthCall = Number.isFinite(call) ? Math.max(0, Math.min(100, call)) : 0;
+        const widthPut = Number.isFinite(put) ? Math.max(0, Math.min(100, put)) : 0;
+        const price = row.underlying_price == null ? "" : "标的 " + row.underlying_price;
+        return (
+          "<tr class=\"border-b border-slate-800/80 hover:bg-slate-800/40\">" +
+            '<td class="px-3 py-2 text-right num text-slate-400">' + esc(row.rank) + "</td>" +
+            '<td class="px-3 py-2 font-semibold" title="' + esc(price) + '">' + esc(row.symbol) + "</td>" +
+            '<td class="px-3 py-2"><div>' + esc(row.name) + '</div><div class="text-[11px] text-slate-500 font-normal">' + esc(row.name_en) + "</div></td>" +
+            '<td class="px-3 py-2 text-right num">' + fmtInt(row.total_volume) + "</td>" +
+            '<td class="px-3 py-2 text-right num ' + sideClass(row.call_pct, row.put_pct) + '">' + fmtPct(row.call_pct) + "</td>" +
+            '<td class="px-3 py-2 text-right num ' + putClass(row.put_pct, row.call_pct) + '">' + fmtPct(row.put_pct) + "</td>" +
+            '<td class="px-3 py-2"><div class="bar" title="看涨 ' + esc(fmtPct(row.call_pct)) + " / 看跌 " + esc(fmtPct(row.put_pct)) + '"><span style="width:' + widthCall + '%"></span><span style="width:' + widthPut + '%"></span></div></td>' +
+            '<td class="px-3 py-2 text-right num">' + fmtIv(row.iv30) + "</td>" +
+            '<td class="px-3 py-2 text-right num ' + changeClass(row.iv30_change) + '">' + fmtChange(row.iv30_change) + "</td>" +
+          "</tr>"
+        );
+      }).join("");
+
+      const missing = (snap.missing || []).concat(snap.stale || []);
+      $("missingNote").textContent = missing.length
+        ? "未进表：" + missing.map((item) => item.symbol + "（" + (item.reason || item.session_date || "缺数据") + "）").join("、")
+        : "";
+    }
+
+    async function load() {
+      try {
+        const res = await fetch("data/latest.json?t=" + Date.now());
+        if (!res.ok) throw new Error(res.status + " " + res.statusText);
+        render(await res.json());
+      } catch (err) {
+        $("status").textContent = "读取失败";
+        $("overviewBody").innerHTML = '<tr><td colspan="9" class="px-3 py-8 text-center text-red-300">读不到 data/latest.json（' + esc(err.message) + "）。请先运行 scripts/fetch_options_volume.py。</td></tr>";
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
