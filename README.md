@@ -12,6 +12,8 @@ A/H 双重上市溢价在同站子目录：https://heber.github.io/cffex-basis/a
 
 美股期权成交量（固定观察池、Cboe IV30）在：https://heber.github.io/cffex-basis/options-volume/
 
+主要宽基 ETF 净申赎（上证50、沪深300、中证A500、中证500、中证1000、创业板、科创50）在：https://heber.github.io/cffex-basis/etf-flow/
+
 静态站托管在 GitHub Pages。行情不由 Pages 上的常驻服务拉取，而是由 GitHub Action 运行 `scripts/fetch_basis.py`，把结果写入 `data/latest.json`。
 
 ## 为什么要矫正分红？
@@ -124,10 +126,12 @@ cffex-basis/
 ├── .github/workflows/update-ah-premium.yml # 同一时刻提交 AH 溢价，只写 ah-premium/data
 ├── .github/workflows/update-spot-basis.yml # 同一时刻提交期现基差，共用 update-basis
 ├── .github/workflows/update-options-volume.yml # 美东收盘后提交期权成交量，共用 update-basis
+├── .github/workflows/update-etf-flow.yml # 工作日 19:00 提交 ETF 申赎，共用 update-basis
 ├── commodity/                         # 商品贴水页，见 commodity/README.md
 ├── ah-premium/                        # AH 溢价页，见 ah-premium/README.md
 ├── spot-basis/                        # 现金现货对期货，见 spot-basis/README.md
 ├── options-volume/                    # 美股期权成交量，见 options-volume/README.md
+├── etf-flow/                          # 宽基 ETF 净申赎，见 etf-flow/README.md
 ├── .nojekyll
 └── README.md
 ```

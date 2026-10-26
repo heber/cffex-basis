@@ -1,0 +1,57 @@
+name: Update ETF flow
+
+on:
+  schedule:
+    # Weekdays at 19:00 Asia/Shanghai (11:00 UTC), after the A-share close.
+    # Exchange ETF share files often appear in the evening and the Shenzhen
+    # file says the morning reprint is the one to keep. This slot is later
+    # than the 16:00 basis jobs. The script re-reads the last several
+    # sessions, so the next weekday run picks up that morning reprint.
+    # GitHub may delay or skip a scheduled run. Use workflow_dispatch to
+    # backfill. Markets are closed on weekends, so this does not run Sat/Sun.
+    - cron: "0 11 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Same repository-wide group as the CFFEX, commodity, AH, spot, and
+# options jobs. cancel-in-progress stays false so a queued run finishes.
+# pull --rebase covers a commit that landed after this job checked out.
+concurrency:
+  group: update-basis
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test ETF flow formula
+        run: python3 etf-flow/scripts/test_etf_flow.py
+
+      - name: Fetch ETF flow snapshot
+        run: python3 etf-flow/scripts/fetch_etf_flow.py
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add etf-flow/data
+          if git diff --cached --quiet; then
+            echo "ETF flow snapshot unchanged"
+          else
+            git commit -m "data: update ETF creation and redemption snapshot"
+            git pull --rebase origin main
+            git push
+          fi
