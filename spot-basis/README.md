@@ -12,6 +12,8 @@ A/H 双重上市溢价：https://heber.github.io/cffex-basis/ah-premium/
 
 美股期权成交量：https://heber.github.io/cffex-basis/options-volume/
 
+主要宽基 ETF 净申赎：https://heber.github.io/cffex-basis/etf-flow/
+
 ## 基差
 
 ```

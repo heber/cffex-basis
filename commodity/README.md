@@ -14,6 +14,8 @@ A/H 双重上市溢价在姊妹页：https://heber.github.io/cffex-basis/ah-prem
 
 美股期权成交量在：https://heber.github.io/cffex-basis/options-volume/
 
+主要宽基 ETF 净申赎在：https://heber.github.io/cffex-basis/etf-flow/
+
 ## 主力是什么
 
 每个品种**只有一条**连续序列，叫主力。某个交易日它等于当时最活跃的那一张合约（持仓加成交最高），不是近月，也不是另挂一条「交易所主力」。

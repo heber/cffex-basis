@@ -14,6 +14,8 @@ A/H 双重上市溢价：https://heber.github.io/cffex-basis/ah-premium/
 
 现金现货对期货的期现基差：https://heber.github.io/cffex-basis/spot-basis/
 
+主要宽基 ETF 净申赎：https://heber.github.io/cffex-basis/etf-flow/
+
 ## 数据从哪来
 
 不需要 API key。脚本只请求 Cboe 延迟行情的两个公开 JSON：
